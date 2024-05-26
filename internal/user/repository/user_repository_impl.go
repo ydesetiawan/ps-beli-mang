@@ -4,7 +4,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"ps-beli-mang/internal/user/model"
 	"ps-beli-mang/pkg/errs"
-	"strings"
 )
 
 type userRepositoryImpl struct {
@@ -61,9 +60,6 @@ func (r *userRepositoryImpl) Register(user *model.User) (string, error) {
 	var lastInsertId = ""
 	err := r.db.QueryRowx(queryInsertUser, user.ID, user.Username, user.Password, user.Email, user.Role).Scan(&lastInsertId)
 	if err != nil {
-		if strings.Contains(err.Error(), "users_username_key") {
-			return lastInsertId, errs.NewErrDataConflict("username already exist", user.Username)
-		}
 		return lastInsertId, errs.NewErrDataConflict("execute query error [RegisterUser]: ", err.Error())
 	}
 

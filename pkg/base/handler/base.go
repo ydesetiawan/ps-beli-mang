@@ -57,6 +57,7 @@ func (h *BaseHTTPHandler) Execute(fn HandlerFn) echo.HandlerFunc {
 
 		httphelper.WriteJSON(c.Response(), httpStatus,
 			response.WebResponse{
+				Token:      resp.Token,
 				Status:     httpStatus,
 				Message:    resp.Message,
 				Data:       resp.Data,
