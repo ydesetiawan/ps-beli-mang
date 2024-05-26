@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/jmoiron/sqlx"
+	"golang.org/x/net/context"
 	"ps-beli-mang/internal/user/model"
 	"ps-beli-mang/pkg/errs"
 )
@@ -38,27 +39,27 @@ const (
 	`
 )
 
-func (r *userRepositoryImpl) GetUserByIDAndRole(id string, role string) (model.User, error) {
+func (r *userRepositoryImpl) GetUserByIDAndRole(ctx context.Context, id string, role string) (model.User, error) {
 	var user model.User
-	err := r.db.Get(&user, queryGetUserByIDAndRole, id, role)
+	err := r.db.GetContext(ctx, &user, queryGetUserByIDAndRole, id, role)
 	if err != nil {
 		return model.User{}, errs.NewErrInternalServerErrors("execute query error [GetUserByIDAndRole]: ", err.Error())
 	}
 	return user, err
 }
 
-func (r *userRepositoryImpl) GetUserByUsernameAndRole(username string, role string) (model.User, error) {
+func (r *userRepositoryImpl) GetUserByUsernameAndRole(ctx context.Context, username string, role string) (model.User, error) {
 	var user model.User
-	err := r.db.Get(&user, queryGetUserByUsernameAndRole, username, role)
+	err := r.db.GetContext(ctx, &user, queryGetUserByUsernameAndRole, username, role)
 	if err != nil {
 		return model.User{}, errs.NewErrInternalServerErrors("execute query error [GetUserByUsernameAndRole]: ", err.Error())
 	}
 	return user, err
 }
 
-func (r *userRepositoryImpl) Register(user *model.User) (string, error) {
+func (r *userRepositoryImpl) Register(ctx context.Context, user *model.User) (string, error) {
 	var lastInsertId = ""
-	err := r.db.QueryRowx(queryInsertUser, user.ID, user.Username, user.Password, user.Email, user.Role).Scan(&lastInsertId)
+	err := r.db.QueryRowxContext(ctx, queryInsertUser, user.ID, user.Username, user.Password, user.Email, user.Role).Scan(&lastInsertId)
 	if err != nil {
 		return lastInsertId, errs.NewErrDataConflict("execute query error [RegisterUser]: ", err.Error())
 	}

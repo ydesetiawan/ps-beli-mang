@@ -35,7 +35,7 @@ func (h *UserHandler) Register(ctx echo.Context, role model.Role) *response.WebR
 	helper.Panic400IfError(err)
 
 	request.Role = string(role)
-	result, err := h.userService.Register(request)
+	result, err := h.userService.Register(ctx.Request().Context(), request)
 	helper.PanicIfError(err, "error when register")
 
 	return &response.WebResponse{
@@ -61,7 +61,7 @@ func (h *UserHandler) Login(ctx echo.Context, role model.Role) *response.WebResp
 	err = dto.ValidateLoginRequest(request)
 	helper.Panic400IfError(err)
 
-	result, err := h.userService.Login(request)
+	result, err := h.userService.Login(ctx.Request().Context(), request)
 	helper.PanicIfError(err, "failed to login")
 
 	return &response.WebResponse{

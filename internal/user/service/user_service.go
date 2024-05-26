@@ -1,6 +1,7 @@
 package service
 
 import (
+	"golang.org/x/net/context"
 	"ps-beli-mang/internal/user/dto"
 	"ps-beli-mang/internal/user/repository"
 	"ps-beli-mang/pkg/bcrypt"
@@ -9,8 +10,8 @@ import (
 )
 
 type UserService interface {
-	Register(request *dto.RegisterRequest) (*dto.UserResponse, error)
-	Login(*dto.LoginRequest) (*dto.UserResponse, error)
+	Register(context.Context, *dto.RegisterRequest) (*dto.UserResponse, error)
+	Login(context.Context, *dto.LoginRequest) (*dto.UserResponse, error)
 }
 
 type userService struct {
@@ -23,12 +24,12 @@ func NewUserServiceImpl(userRepository repository.UserRepository) UserService {
 	}
 }
 
-func (s *userService) Register(request *dto.RegisterRequest) (*dto.UserResponse, error) {
+func (s *userService) Register(ctx context.Context, request *dto.RegisterRequest) (*dto.UserResponse, error) {
 	user := dto.NewUser(request)
 	hashedPassword, _ := bcrypt.HashPassword(request.Password)
 	user.Password = hashedPassword
 
-	id, err := s.userRepository.Register(user)
+	id, err := s.userRepository.Register(ctx, user)
 	if err != nil {
 		return &dto.UserResponse{}, err
 	}
@@ -38,10 +39,10 @@ func (s *userService) Register(request *dto.RegisterRequest) (*dto.UserResponse,
 	}, nil
 }
 
-func (s *userService) Login(req *dto.LoginRequest) (*dto.UserResponse, error) {
+func (s *userService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.UserResponse, error) {
 	response := &dto.UserResponse{}
 
-	user, err := s.userRepository.GetUserByUsernameAndRole(req.Username, string(req.Role))
+	user, err := s.userRepository.GetUserByUsernameAndRole(ctx, req.Username, string(req.Role))
 	if err != nil {
 		return response, errs.NewErrDataNotFound("user not found ", req.Username, errs.ErrorData{})
 	}
