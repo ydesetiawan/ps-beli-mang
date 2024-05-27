@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	imagehandler "ps-beli-mang/internal/image/handler"
+	merchanthandler "ps-beli-mang/internal/merchant/handler"
 	purchasehandler "ps-beli-mang/internal/purchase/handler"
 	userhandler "ps-beli-mang/internal/user/handler"
 	bhandler "ps-beli-mang/pkg/base/handler"
@@ -16,6 +17,7 @@ type Server struct {
 	baseHandler     *bhandler.BaseHTTPHandler
 	userHandler     *userhandler.UserHandler
 	imageHandler    *imagehandler.ImageHandler
+	merchantHandler *merchanthandler.MerchantHandler
 	purchaseHandler *purchasehandler.PurchaseHandler
 	echo            *echo.Echo
 	port            int
@@ -25,6 +27,7 @@ func NewServer(
 	bHandler *bhandler.BaseHTTPHandler,
 	userHandler *userhandler.UserHandler,
 	imageHandler *imagehandler.ImageHandler,
+	merchantHandler *merchanthandler.MerchantHandler,
 	purchaseHandler *purchasehandler.PurchaseHandler,
 	port int,
 ) Server {
@@ -32,6 +35,7 @@ func NewServer(
 		baseHandler:     bHandler,
 		userHandler:     userHandler,
 		imageHandler:    imageHandler,
+		merchantHandler: merchantHandler,
 		purchaseHandler: purchaseHandler,
 		echo:            echo.New(),
 		port:            port,

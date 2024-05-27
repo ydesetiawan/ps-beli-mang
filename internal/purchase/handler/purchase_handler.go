@@ -16,7 +16,7 @@ func NewPurchaseHandler(orderService service.OrderService) *PurchaseHandler {
 	}
 }
 
-func (h *PurchaseHandler) GetMerchant(ctx echo.Context) *response.WebResponse {
+func (h *PurchaseHandler) GetNearMerchant(ctx echo.Context) *response.WebResponse {
 	return nil
 }
 

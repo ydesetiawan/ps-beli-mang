@@ -8,6 +8,9 @@ import (
 	"ps-beli-mang/configs"
 	imagehandler "ps-beli-mang/internal/image/handler"
 	imageservice "ps-beli-mang/internal/image/service"
+	merchanthandler "ps-beli-mang/internal/merchant/handler"
+	merchantrepository "ps-beli-mang/internal/merchant/repository"
+	merchantservice "ps-beli-mang/internal/merchant/service"
 	purchasehandler "ps-beli-mang/internal/purchase/handler"
 	purchaserepository "ps-beli-mang/internal/purchase/repository"
 	purchaseservice "ps-beli-mang/internal/purchase/service"
@@ -39,6 +42,7 @@ var (
 	baseHandler     *bhandler.BaseHTTPHandler
 	userHandler     *userhandler.UserHandler
 	imageHandler    *imagehandler.ImageHandler
+	merchantHandler *merchanthandler.MerchantHandler
 	purchaseHandler *purchasehandler.PurchaseHandler
 	cfg             *configs.MainConfig
 )
@@ -104,6 +108,7 @@ func runHttpCommand(cmd *cobra.Command, args []string) error {
 		baseHandler,
 		userHandler,
 		imageHandler,
+		merchantHandler,
 		purchaseHandler,
 		port,
 	)
@@ -124,6 +129,10 @@ func initInfra() {
 	userHandler = userhandler.NewUserHandler(userService)
 	imageService := imageservice.NewImageService(cfg)
 	imageHandler = imagehandler.NewImageHandler(imageService)
+
+	merchantRepository := merchantrepository.NewMerchantRepositoryImpl(db)
+	merchantService := merchantservice.NewMerchantServiceImpl(merchantRepository)
+	merchantHandler = merchanthandler.NewMerchantHandler(merchantService)
 
 	orderRepository := purchaserepository.NewOrderRepositoryImpl(db)
 	orderService := purchaseservice.NewOrderServiceImpl(orderRepository)

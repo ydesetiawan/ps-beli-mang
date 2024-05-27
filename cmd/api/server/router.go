@@ -18,7 +18,12 @@ func (s *Server) setupRouter(e *echo.Echo) {
 
 	v1.POST("/image", s.baseHandler.RunActionAuth(s.imageHandler.UploadImage))
 
-	v1.GET("/merchants/nearby/:lat,:long", s.baseHandler.RunActionAuth(s.purchaseHandler.GetMerchant))
+	v1.POST("/admin/merchants/", s.baseHandler.RunActionAuth(s.merchantHandler.CreateMerchant))
+	v1.GET("/admin/merchants/", s.baseHandler.RunActionAuth(s.merchantHandler.GetMerchant))
+	v1.POST("/admin/merchants/:merchantId/items/", s.baseHandler.RunActionAuth(s.merchantHandler.CreateMerchantItem))
+	v1.GET("/admin/merchants/:merchantId/items/", s.baseHandler.RunActionAuth(s.merchantHandler.GetMerchantItem))
+
+	v1.GET("/merchants/nearby/:lat,:long", s.baseHandler.RunActionAuth(s.purchaseHandler.GetNearMerchant))
 	v1.POST("/users/estimate/", s.baseHandler.RunActionAuth(s.purchaseHandler.OrderEstimate))
 	v1.POST("/users/orders/", s.baseHandler.RunActionAuth(s.purchaseHandler.Order))
 	v1.GET("/users/orders/", s.baseHandler.RunActionAuth(s.purchaseHandler.GetOrder))
