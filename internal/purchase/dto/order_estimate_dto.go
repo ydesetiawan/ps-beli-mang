@@ -20,3 +20,9 @@ type Item struct {
 	ItemID   string `json:"itemId"`
 	Quantity int    `json:"quantity"`
 }
+
+type OrderEstimateResponse struct {
+	TotalPrice                     float64 `json:"totalPrice"`
+	EstimatedDeliveryTimeInMinutes int     `json:"estimatedDeliveryTimeInMinutes"`
+	CalculatedEstimateId           string  `json:"calculatedEstimateId"`
+}
