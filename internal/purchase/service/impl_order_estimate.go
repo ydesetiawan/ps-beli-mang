@@ -13,11 +13,13 @@ import (
 func (o orderService) OrderEstimate(ctx context.Context, request dto.OrderEstimateRequest) (dto.OrderEstimateResponse, error) {
 	id := helper.GenerateULID()
 	var result dto.OrderEstimateResponse
+	//Validation
 	orderData, err := validationOrderEstimate(ctx, request, o)
 	if err != nil {
 		return result, err
 	}
 
+	//Calculate total Price
 	totalPrice := 0
 	mapMerchantLocation := make(map[string]model.Location)
 	for _, item := range orderData.MerchantItems {
@@ -25,13 +27,8 @@ func (o orderService) OrderEstimate(ctx context.Context, request dto.OrderEstima
 		mapMerchantLocation[item.MerchantID] = item.Merchant().Location()
 	}
 
-	merchantLocation := append([]model.Location{}, mapMerchantLocation[orderData.MerchantStartingPointId])
-	for key, item := range mapMerchantLocation {
-		if key != orderData.MerchantStartingPointId {
-			merchantLocation = append(merchantLocation, item)
-		}
-	}
-
+	//EstimateDeliveryTimeTSP
+	merchantLocation := getMerchantLocation(mapMerchantLocation, orderData)
 	estimateDeliveryTIme, err := EstimateDeliveryTimeTSP(merchantLocation, request.UserLocation)
 	if err != nil {
 		return result, err
@@ -45,6 +42,16 @@ func (o orderService) OrderEstimate(ctx context.Context, request dto.OrderEstima
 		CalculatedEstimateId:           id,
 	}, err
 
+}
+
+func getMerchantLocation(mapMerchantLocation map[string]model.Location, orderData dto.OrderEstimateProcess) []model.Location {
+	merchantLocation := append([]model.Location{}, mapMerchantLocation[orderData.MerchantStartingPointId])
+	for key, item := range mapMerchantLocation {
+		if key != orderData.MerchantStartingPointId {
+			merchantLocation = append(merchantLocation, item)
+		}
+	}
+	return merchantLocation
 }
 
 func validationOrderEstimate(ctx context.Context, request dto.OrderEstimateRequest, o orderService) (dto.OrderEstimateProcess, error) {
@@ -65,6 +72,7 @@ func validationOrderEstimate(ctx context.Context, request dto.OrderEstimateReque
 		return orderData, err
 	}
 
+	//Get Merchant Item in merchant id and item id
 	merchantItems, err := o.orderRepository.GetMerchantItems(ctx, buildParams(merchantIds, itemQtyIds))
 	if err != nil {
 		return orderData, err
@@ -91,6 +99,7 @@ func buildParams(merchantIds map[string]struct{}, itemIds map[string]int) []inte
 	return args
 }
 
+// Return merchantStartingPointId, error
 func validateStartingPoints(request dto.OrderEstimateRequest) (string, error) {
 	// Validate there's exactly one isStartingPoint == true
 	startingPoints := 0
@@ -125,6 +134,7 @@ func intKeys(m map[string]int) []string {
 	return keys
 }
 
+// Validate Merchant ID and Item ID
 func isValidMerchantData(merchantIds map[string]struct{}, itemIds map[string]int, merchantItems []model.MerchantItem) error {
 	foundMerchants := make(map[string]struct{}, len(merchantIds))
 	foundItems := make(map[string]struct{}, len(itemIds))
