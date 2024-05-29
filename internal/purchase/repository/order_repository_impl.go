@@ -33,7 +33,7 @@ SELECT
 	mi.id = ANY($2)
 `
 
-func (o orderRepositoryImpl) GetMerchantItem(ctx context.Context, args []interface{}) ([]model.MerchantItem, error) {
+func (o orderRepositoryImpl) GetMerchantItems(ctx context.Context, args []interface{}) ([]model.MerchantItem, error) {
 	result := make([]model.MerchantItem, 0)
 	rows, err := o.db.QueryContext(ctx, queryCheckMerchantItem, args...)
 	if err != nil {
@@ -42,11 +42,14 @@ func (o orderRepositoryImpl) GetMerchantItem(ctx context.Context, args []interfa
 	defer rows.Close()
 
 	for rows.Next() {
-		var merchantItem model.MerchantItem
-		if err := rows.Scan(&merchantItem.ID, &merchantItem.MerchantID, &merchantItem.Lat, &merchantItem.Long); err != nil {
+		var item model.MerchantItem
+		var merchant model.Merchant
+		if err := rows.Scan(&item.ID, &item.MerchantID, &merchant.LocLat, &merchant.LocLong); err != nil {
 			return result, errs.NewErrInternalServerErrors("Error scanning row: %v", err)
 		}
-		result = append(result, merchantItem)
+
+		item.SetMerchant(merchant)
+		result = append(result, item)
 	}
 
 	return result, nil

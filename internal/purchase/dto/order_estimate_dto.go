@@ -1,13 +1,12 @@
 package dto
 
-type OrderEstimateRequest struct {
-	UserLocation UserLocation `json:"userLocation"`
-	Orders       []Order      `json:"orders"`
-}
+import (
+	"ps-beli-mang/internal/merchant/model"
+)
 
-type UserLocation struct {
-	Lat  float64 `json:"lat"`
-	Long float64 `json:"long"`
+type OrderEstimateRequest struct {
+	UserLocation model.Location `json:"userLocation"`
+	Orders       []Order        `json:"orders"`
 }
 
 type Order struct {
@@ -21,8 +20,14 @@ type Item struct {
 	Quantity int    `json:"quantity"`
 }
 
+type OrderEstimateProcess struct {
+	MerchantItems           []model.MerchantItem
+	ItemQtyIds              map[string]int
+	MerchantStartingPointId string
+}
+
 type OrderEstimateResponse struct {
-	TotalPrice                     float64 `json:"totalPrice"`
-	EstimatedDeliveryTimeInMinutes int     `json:"estimatedDeliveryTimeInMinutes"`
-	CalculatedEstimateId           string  `json:"calculatedEstimateId"`
+	TotalPrice                     int    `json:"totalPrice"`
+	EstimatedDeliveryTimeInMinutes int    `json:"estimatedDeliveryTimeInMinutes"`
+	CalculatedEstimateId           string `json:"calculatedEstimateId"`
 }

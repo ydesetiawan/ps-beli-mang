@@ -27,7 +27,7 @@ func (h *PurchaseHandler) OrderEstimate(ctx echo.Context) *response.WebResponse 
 	err := ctx.Bind(&request)
 	helper.Panic400IfError(err)
 
-	result, err := h.orderService.OrderEstimate(ctx.Request().Context(), request)
+	result, err := h.orderService.OrderEstimate(ctx.Request().Context(), *request)
 	helper.PanicIfError(err, "CreateMedicalPatient failed")
 
 	return &response.WebResponse{

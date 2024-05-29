@@ -1,19 +1,60 @@
 package model
 
 import (
-	"database/sql"
+	"slices"
 	"time"
 )
 
+type ItemCategory string
+
+const (
+	Beverage   ItemCategory = "Beverage"
+	Food       ItemCategory = "Food"
+	Snack      ItemCategory = "Snack"
+	Condiments ItemCategory = "Condiments"
+	Additions  ItemCategory = "Additions"
+)
+
+var itemCategories []ItemCategory = []ItemCategory{Beverage, Food, Snack, Condiments, Additions}
+
+func (pc ItemCategory) String() string {
+	return string(pc)
+}
+
+func (pc ItemCategory) Valid() bool {
+	return slices.Index(itemCategories, ItemCategory(pc)) != -1
+}
+
+func ValidMerchantItemCategory(category string) bool {
+	var categories = []ItemCategory{
+		Beverage,
+		Food,
+		Snack,
+		Condiments,
+		Additions,
+	}
+
+	return slices.IndexFunc(categories, func(ic ItemCategory) bool {
+		return ic.String() == category
+	}) != -1
+}
+
 type MerchantItem struct {
-	ID         string         `db:"id"`
-	MerchantID string         `db:"merchant_id"`
-	Long       float64        `db:"-"`
-	Lat        float64        `db:"-"`
-	Name       string         `db:"name"`
-	Category   sql.NullString `db:"category"`
-	ImageURL   sql.NullString `db:"image_url"`
-	Quantity   int            `db:"-"`
-	Price      float64        `db:"price"`
-	CreatedAt  time.Time      `db:"created_at"`
+	ID         string
+	Name       string
+	Category   ItemCategory
+	ImageUrl   string
+	Price      int
+	CreatedAt  time.Time
+	CreatedBy  string
+	MerchantID string
+	merchant   Merchant
+}
+
+func (m *MerchantItem) SetMerchant(merchant Merchant) {
+	m.merchant = merchant
+}
+
+func (m MerchantItem) Merchant() Merchant {
+	return m.merchant
 }

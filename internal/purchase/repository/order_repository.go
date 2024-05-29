@@ -6,5 +6,5 @@ import (
 )
 
 type OrderRepository interface {
-	GetMerchantItem(ctx context.Context, args []interface{}) ([]merchantModel.MerchantItem, error)
+	GetMerchantItems(ctx context.Context, args []interface{}) ([]merchantModel.MerchantItem, error)
 }

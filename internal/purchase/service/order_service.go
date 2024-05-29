@@ -6,5 +6,5 @@ import (
 )
 
 type OrderService interface {
-	OrderEstimate(ctx context.Context, request *dto.OrderEstimateRequest) (dto.OrderEstimateResponse, error)
+	OrderEstimate(ctx context.Context, request dto.OrderEstimateRequest) (dto.OrderEstimateResponse, error)
 }
