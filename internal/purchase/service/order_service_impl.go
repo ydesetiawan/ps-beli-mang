@@ -1,8 +1,6 @@
 package service
 
-import (
-	"ps-beli-mang/internal/purchase/repository"
-)
+import "ps-beli-mang/internal/purchase/repository"
 
 type orderService struct {
 	orderRepository repository.OrderRepository
