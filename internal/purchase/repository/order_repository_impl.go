@@ -2,12 +2,14 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/net/context"
 	merchantModel "ps-beli-mang/internal/merchant/model"
 	"ps-beli-mang/internal/purchase/dto"
 	"ps-beli-mang/internal/purchase/model"
 	"ps-beli-mang/pkg/errs"
+	"strings"
 	"time"
 )
 
@@ -124,7 +126,164 @@ func (o orderRepositoryImpl) UpdateOrderSetIsOrderTrue(ctx context.Context, orde
 	return nil
 }
 
-func (o orderRepositoryImpl) GetOrdersByUser(ctx context.Context, args []interface{}, userID string) ([]dto.OrderDataResponse, error) {
-	//TODO implement me
-	panic("implement me")
+// Function to build order history query
+func buildOrderHistoryQuery(params dto.OrderDataRequestParams) string {
+	var filters []string
+
+	// Add conditions based on the parameters
+	if params.MerchantID != "" {
+		filters = append(filters, fmt.Sprintf("oi.merchant_id = '%s'", params.MerchantID))
+	}
+	if params.Name != "" {
+		filters = append(filters, fmt.Sprintf("(LOWER(m.name) LIKE LOWER('%%%s%%') OR LOWER(mi.name) LIKE LOWER('%%%s%%'))", params.Name, params.Name))
+	}
+	if params.MerchantCategory != "" {
+		filters = append(filters, fmt.Sprintf("m.merchant_category = '%s'", params.MerchantCategory))
+	}
+
+	filters = append(filters, "uo.is_order = true")
+
+	// Construct query using CTE
+	query := fmt.Sprintf(`
+		WITH user_orders AS (
+			SELECT o.id AS order_id, o.user_id, o.total_price, o.delivery_time, o.is_order, o.created_at AS order_created_at
+			FROM orders o
+			WHERE o.user_id = '%s'
+		)
+		SELECT 
+			uo.order_id,
+			uo.user_id,
+			uo.total_price,
+			uo.delivery_time,
+			uo.is_order,
+			uo.order_created_at,
+			oi.id AS order_item_id,
+			oi.merchant_id,
+			oi.merchant_item_id,
+			oi.quantity,
+			oi.price,
+			oi.created_at AS order_item_created_at,
+			m.name AS merchant_name,
+			m.merchant_category,
+			mi.name AS merchant_item_name,
+			mi.category AS merchant_item_category
+		FROM 
+			user_orders uo
+		JOIN 
+			order_items oi ON uo.order_id = oi.order_id
+		JOIN 
+			merchants m ON oi.merchant_id = m.id
+		JOIN 
+			merchant_items mi ON oi.merchant_item_id = mi.id`, params.UserID)
+
+	if len(filters) > 0 {
+		query += " WHERE " + strings.Join(filters, " AND ")
+	}
+
+	query += " ORDER BY uo.order_created_at DESC"
+
+	limit := 5
+	if params.Limit > 0 {
+		limit = params.Limit
+	}
+	offset := 0
+	if params.Offset > 0 {
+		offset = params.Offset
+	}
+	query += fmt.Sprintf(" LIMIT %d OFFSET %d", limit, offset)
+
+	return query
+}
+
+func (o orderRepositoryImpl) GetOrdersByUser(ctx context.Context, params dto.OrderDataRequestParams) ([]dto.OrderDataResponse, error) {
+	query := buildOrderHistoryQuery(params)
+
+	var rawResults []struct {
+		OrderID              string    `db:"order_id"`
+		UserID               string    `db:"user_id"`
+		TotalPrice           float64   `db:"total_price"`
+		DeliveryTime         int       `db:"delivery_time"`
+		IsOrder              bool      `db:"is_order"`
+		OrderCreatedAt       time.Time `db:"order_created_at"`
+		OrderItemID          string    `db:"order_item_id"`
+		MerchantID           string    `db:"merchant_id"`
+		MerchantName         string    `db:"merchant_name"`
+		MerchantCategory     string    `db:"merchant_category"`
+		MerchantImageURL     string    `db:"image_url"`
+		Latitude             float64   `db:"latitude"`
+		Longitude            float64   `db:"longitude"`
+		MerchantCreatedAt    time.Time `db:"created_at"`
+		MerchantItemID       string    `db:"merchant_item_id"`
+		MerchantItemName     string    `db:"merchant_item_name"`
+		MerchantItemCategory string    `db:"merchant_item_category"`
+		MerchantItemImageURL string    `db:"merchant_item_image_url"`
+		Price                float64   `db:"price"`
+		Quantity             int       `db:"quantity"`
+		OrderItemCreatedAt   time.Time `db:"order_item_created_at"`
+	}
+
+	err := o.db.SelectContext(ctx, &rawResults, query)
+	if err != nil {
+		return nil, err
+	}
+
+	// Process raw results into the structured response
+	orderMap := make(map[string]*dto.OrderDataResponse)
+	for _, raw := range rawResults {
+		if _, exists := orderMap[raw.OrderID]; !exists {
+			orderMap[raw.OrderID] = &dto.OrderDataResponse{
+				OrderID: raw.OrderID,
+				Orders:  []dto.PurchaseOrder{},
+			}
+		}
+
+		orderData := orderMap[raw.OrderID]
+
+		var existingPurchaseOrder *dto.PurchaseOrder
+		for i := range orderData.Orders {
+			if orderData.Orders[i].Merchant.MerchantID == raw.MerchantID {
+				existingPurchaseOrder = &orderData.Orders[i]
+				break
+			}
+		}
+
+		if existingPurchaseOrder == nil {
+			newMerchant := dto.Merchant{
+				MerchantID:       raw.MerchantID,
+				Name:             raw.MerchantName,
+				MerchantCategory: raw.MerchantCategory,
+				ImageURL:         raw.MerchantImageURL,
+				Location: merchantModel.Location{
+					Lat:  raw.Latitude,
+					Long: raw.Longitude,
+				},
+				CreatedAt: raw.MerchantCreatedAt,
+			}
+			newPurchaseOrder := dto.PurchaseOrder{
+				Merchant: newMerchant,
+				Items:    []dto.PurchaseItem{},
+			}
+			orderData.Orders = append(orderData.Orders, newPurchaseOrder)
+			existingPurchaseOrder = &newPurchaseOrder
+		}
+
+		purchaseItem := dto.PurchaseItem{
+			ItemID:          raw.MerchantItemID,
+			Name:            raw.MerchantItemName,
+			ProductCategory: raw.MerchantItemCategory,
+			Price:           raw.Price,
+			Quantity:        raw.Quantity,
+			ImageURL:        raw.MerchantItemImageURL,
+			CreatedAt:       raw.OrderItemCreatedAt,
+		}
+
+		existingPurchaseOrder.Items = append(existingPurchaseOrder.Items, purchaseItem)
+	}
+
+	var results []dto.OrderDataResponse
+	for _, orderData := range orderMap {
+		results = append(results, *orderData)
+	}
+
+	return results, nil
 }

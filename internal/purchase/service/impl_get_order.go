@@ -6,5 +6,5 @@ import (
 )
 
 func (o orderService) GetOrders(ctx context.Context, params dto.OrderDataRequestParams) ([]dto.OrderDataResponse, error) {
-	return o.orderRepository.GetOrdersByUser(ctx, nil, "")
+	return o.orderRepository.GetOrdersByUser(ctx, params)
 }

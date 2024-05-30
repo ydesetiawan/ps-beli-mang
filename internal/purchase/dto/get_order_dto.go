@@ -35,10 +35,10 @@ type OrderDataResponse struct {
 }
 
 type OrderDataRequestParams struct {
-	MerchantID       *string `query:"merchantId"`
-	Limit            *int    `query:"limit"`
-	Offset           *int    `query:"offset"`
-	Name             *string `query:"name"`
-	MerchantCategory *string `query:"merchantCategory"`
-	UserID           string  `query:"-"`
+	MerchantID       string `query:"merchantId"`
+	Limit            int    `query:"limit"`
+	Offset           int    `query:"offset"`
+	Name             string `query:"name"`
+	MerchantCategory string `query:"merchantCategory"`
+	UserID           string `query:"-"`
 }

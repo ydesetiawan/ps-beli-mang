@@ -88,7 +88,7 @@ func (h *PurchaseHandler) GetOrders(ctx echo.Context) *response.WebResponse {
 	helper.PanicIfError(err, "user unauthorized")
 
 	var params = new(dto.OrderDataRequestParams)
-	err = ctx.Bind(&params)
+	err = ctx.Bind(params)
 	helper.Panic400IfError(err)
 
 	params.UserID = userID
