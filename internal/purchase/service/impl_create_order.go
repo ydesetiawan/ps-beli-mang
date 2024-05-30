@@ -6,5 +6,5 @@ import (
 )
 
 func (o orderService) CreateOrder(ctx context.Context, request dto.CreateOrderRequest) error {
-	return o.orderRepository.UpdateIsOrderTrue(ctx, request.CalculatedEstimateId)
+	return o.orderRepository.UpdateOrderSetIsOrderTrue(ctx, request.CalculatedEstimateId)
 }

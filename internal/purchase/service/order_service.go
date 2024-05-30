@@ -9,6 +9,7 @@ import (
 type OrderService interface {
 	OrderEstimate(ctx context.Context, request dto.OrderEstimateRequest) (dto.OrderEstimateResponse, error)
 	CreateOrder(ctx context.Context, request dto.CreateOrderRequest) error
+	GetOrders(ctx context.Context, request dto.OrderDataRequestParams) ([]dto.OrderDataResponse, error)
 }
 
 type orderService struct {

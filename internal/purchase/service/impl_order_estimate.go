@@ -45,16 +45,15 @@ func buildOrder(orderId string, preOrder dto.PreOrder) (model.Order, error) {
 	mapMerchantLocation := make(map[string]merchantModel.Location)
 	orderItems := make([]model.OrderItem, 0)
 	for _, item := range preOrder.MerchantItems {
-		amount := item.Price * float64(preOrder.ItemQtyIds[item.ID])
-		totalPrice += amount
+		totalPrice += item.Price * float64(preOrder.ItemQtyIds[item.ID])
 		orderItem := model.OrderItem{
 			ID:             helper.GenerateULID(),
+			UserID:         preOrder.UserID,
 			OrderID:        orderId,
 			MerchantID:     item.MerchantID,
 			MerchantItemID: item.ID,
 			Price:          item.Price,
 			Quantity:       preOrder.ItemQtyIds[item.ID],
-			Amount:         amount,
 		}
 		orderItems = append(orderItems, orderItem)
 		mapMerchantLocation[item.MerchantID] = item.Merchant().Location()
@@ -70,11 +69,10 @@ func buildOrder(orderId string, preOrder dto.PreOrder) (model.Order, error) {
 
 	order := model.Order{
 		ID:           orderId,
+		UserID:       preOrder.UserID,
 		TotalPrice:   totalPrice,
 		DeliveryTime: int(math.Round(estimateDeliveryTIme.Minutes())),
 		IsOrder:      false,
-		UserLocLat:   preOrder.UserLocation.Lat,
-		UserLocLong:  preOrder.UserLocation.Long,
 		OrderItems:   orderItems,
 	}
 	return order, nil
@@ -124,6 +122,7 @@ func validationOrderEstimate(ctx context.Context, request dto.OrderEstimateReque
 	preOrder.MerchantItems = merchantItems
 	preOrder.MerchantStartingPointId = merchantStartingPointId
 	preOrder.UserLocation = request.UserLocation
+	preOrder.UserID = request.UserID
 	return preOrder, nil
 }
 

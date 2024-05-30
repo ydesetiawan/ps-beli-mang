@@ -5,6 +5,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/net/context"
 	merchantModel "ps-beli-mang/internal/merchant/model"
+	"ps-beli-mang/internal/purchase/dto"
 	"ps-beli-mang/internal/purchase/model"
 	"ps-beli-mang/pkg/errs"
 	"time"
@@ -52,12 +53,12 @@ func (o orderRepositoryImpl) GetMerchantItems(ctx context.Context, args []interf
 
 const (
 	insertOrderQuery = `
-		INSERT INTO orders (id, total_price, delivery_time, is_order, user_loc_lat, user_loc_long, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO orders (id, user_id, total_price, delivery_time, is_order, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 	`
 	insertOrderItemQuery = `
-		INSERT INTO order_items (id, order_id, merchant_id, is_starting_point, merchant_item_id, quantity, price, amount, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO order_items (id, user_id, order_id, merchant_id, merchant_item_id, quantity, price, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 )
 
@@ -69,7 +70,7 @@ func (o orderRepositoryImpl) SaveOrder(ctx context.Context, order model.Order) e
 	}
 
 	// Insert the order
-	_, err = tx.ExecContext(ctx, insertOrderQuery, order.ID, order.TotalPrice, order.DeliveryTime, order.IsOrder, order.UserLocLat, order.UserLocLong, time.Now())
+	_, err = tx.ExecContext(ctx, insertOrderQuery, order.ID, order.UserID, order.TotalPrice, order.DeliveryTime, order.IsOrder, time.Now())
 	if err != nil {
 		tx.Rollback()
 		return errs.NewErrInternalServerErrors("error inserting order: %w", err)
@@ -77,7 +78,7 @@ func (o orderRepositoryImpl) SaveOrder(ctx context.Context, order model.Order) e
 
 	// Insert the order items
 	for _, item := range order.OrderItems {
-		_, err = tx.ExecContext(ctx, insertOrderItemQuery, item.ID, item.OrderID, item.MerchantID, item.IsStartingPoint, item.MerchantItemID, item.Quantity, item.Price, item.Amount, time.Now())
+		_, err = tx.ExecContext(ctx, insertOrderItemQuery, item.ID, item.UserID, item.OrderID, item.MerchantID, item.MerchantItemID, item.Quantity, item.Price, time.Now())
 		if err != nil {
 			err := tx.Rollback()
 			return errs.NewErrInternalServerErrors("error inserting order item: %w", err)
@@ -103,7 +104,7 @@ const updateUpdateIsOrderTrueQuery = `
 		WHERE id = (SELECT id FROM order_to_update);
 	`
 
-func (o orderRepositoryImpl) UpdateIsOrderTrue(ctx context.Context, orderID string) error {
+func (o orderRepositoryImpl) UpdateOrderSetIsOrderTrue(ctx context.Context, orderID string) error {
 	result, err := o.db.ExecContext(ctx, updateUpdateIsOrderTrueQuery, orderID)
 	if err != nil {
 		return errs.NewErrInternalServerErrors("error updating order: %w", err)
@@ -121,4 +122,9 @@ func (o orderRepositoryImpl) UpdateIsOrderTrue(ctx context.Context, orderID stri
 
 	// If we reach here, the order was updated successfully
 	return nil
+}
+
+func (o orderRepositoryImpl) GetOrdersByUser(ctx context.Context, args []interface{}, userID string) ([]dto.OrderDataResponse, error) {
+	//TODO implement me
+	panic("implement me")
 }

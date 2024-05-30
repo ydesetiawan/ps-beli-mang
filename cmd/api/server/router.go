@@ -19,9 +19,9 @@ func (s *Server) setupRouter(e *echo.Echo) {
 	userV1.POST("/login", s.baseHandler.RunAction(s.userHandler.LoginUser))
 
 	usersV1 := e.Group("/users")
-	usersV1.POST("/estimate", s.baseHandler.RunAction(s.purchaseHandler.OrderEstimate))
+	usersV1.POST("/estimate", s.baseHandler.RunActionAuth(s.purchaseHandler.OrderEstimate))
 	usersV1.POST("/orders", s.baseHandler.RunActionAuth(s.purchaseHandler.Order))
-	usersV1.GET("/orders", s.baseHandler.RunActionAuth(s.purchaseHandler.GetOrder))
+	usersV1.GET("/orders", s.baseHandler.RunActionAuth(s.purchaseHandler.GetOrders))
 
 	e.POST("/image", s.baseHandler.RunActionAuth(s.imageHandler.UploadImage))
 	e.GET("/merchants/nearby/:lat,:long", s.baseHandler.RunActionAuth(s.purchaseHandler.GetNearMerchant))

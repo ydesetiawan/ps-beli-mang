@@ -7,6 +7,7 @@ import (
 type OrderEstimateRequest struct {
 	UserLocation model.Location `json:"userLocation"`
 	Orders       []Order        `json:"orders"`
+	UserID       string         `json:"-"`
 }
 
 type Order struct {
@@ -25,6 +26,7 @@ type PreOrder struct {
 	ItemQtyIds              map[string]int
 	MerchantStartingPointId string
 	UserLocation            model.Location
+	UserID                  string
 }
 
 type OrderEstimateResponse struct {
