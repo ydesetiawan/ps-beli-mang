@@ -20,14 +20,15 @@ type Item struct {
 	Quantity int    `json:"quantity"`
 }
 
-type OrderEstimateProcess struct {
+type PreOrder struct {
 	MerchantItems           []model.MerchantItem
 	ItemQtyIds              map[string]int
 	MerchantStartingPointId string
+	UserLocation            model.Location
 }
 
 type OrderEstimateResponse struct {
-	TotalPrice                     int    `json:"totalPrice"`
-	EstimatedDeliveryTimeInMinutes int    `json:"estimatedDeliveryTimeInMinutes"`
-	CalculatedEstimateId           string `json:"calculatedEstimateId"`
+	TotalPrice                     float64 `json:"totalPrice"`
+	EstimatedDeliveryTimeInMinutes int     `json:"estimatedDeliveryTimeInMinutes"`
+	CalculatedEstimateId           string  `json:"calculatedEstimateId"`
 }

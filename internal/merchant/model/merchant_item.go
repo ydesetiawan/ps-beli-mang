@@ -44,7 +44,7 @@ type MerchantItem struct {
 	Name       string
 	Category   ItemCategory
 	ImageUrl   string
-	Price      int
+	Price      float64
 	CreatedAt  time.Time
 	CreatedBy  string
 	MerchantID string

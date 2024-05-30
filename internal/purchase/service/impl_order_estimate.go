@@ -4,48 +4,83 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/net/context"
 	"math"
-	"ps-beli-mang/internal/merchant/model"
+	merchantModel "ps-beli-mang/internal/merchant/model"
 	"ps-beli-mang/internal/purchase/dto"
+	"ps-beli-mang/internal/purchase/model"
 	"ps-beli-mang/pkg/errs"
 	"ps-beli-mang/pkg/helper"
 )
 
 func (o orderService) OrderEstimate(ctx context.Context, request dto.OrderEstimateRequest) (dto.OrderEstimateResponse, error) {
-	id := helper.GenerateULID()
-	var result dto.OrderEstimateResponse
+	orderId := helper.GenerateULID()
+	var response dto.OrderEstimateResponse
 	//Validation
-	orderData, err := validationOrderEstimate(ctx, request, o)
+	preOrder, err := validationOrderEstimate(ctx, request, o)
 	if err != nil {
-		return result, err
+		return response, err
 	}
 
-	//Calculate total Price
-	totalPrice := 0
-	mapMerchantLocation := make(map[string]model.Location)
-	for _, item := range orderData.MerchantItems {
-		totalPrice += item.Price * orderData.ItemQtyIds[item.ID]
-		mapMerchantLocation[item.MerchantID] = item.Merchant().Location()
-	}
-
-	//EstimateDeliveryTimeTSP
-	merchantLocation := getMerchantLocation(mapMerchantLocation, orderData)
-	estimateDeliveryTIme, err := EstimateDeliveryTimeTSP(merchantLocation, request.UserLocation)
+	//Build Order
+	order, err := buildOrder(orderId, preOrder)
 	if err != nil {
-		return result, err
+		return response, err
 	}
 
-	//TODO save to order and order detail
+	//Save Order
+	err = o.orderRepository.SaveOrder(ctx, order)
+	if err != nil {
+		return response, err
+	}
 
 	return dto.OrderEstimateResponse{
-		TotalPrice:                     totalPrice,
-		EstimatedDeliveryTimeInMinutes: int(math.Round(estimateDeliveryTIme.Minutes())),
-		CalculatedEstimateId:           id,
+		TotalPrice:                     order.TotalPrice,
+		EstimatedDeliveryTimeInMinutes: order.DeliveryTime,
+		CalculatedEstimateId:           order.ID,
 	}, err
 
 }
 
-func getMerchantLocation(mapMerchantLocation map[string]model.Location, orderData dto.OrderEstimateProcess) []model.Location {
-	merchantLocation := append([]model.Location{}, mapMerchantLocation[orderData.MerchantStartingPointId])
+func buildOrder(orderId string, preOrder dto.PreOrder) (model.Order, error) {
+	totalPrice := 0.0
+	mapMerchantLocation := make(map[string]merchantModel.Location)
+	orderItems := make([]model.OrderItem, 0)
+	for _, item := range preOrder.MerchantItems {
+		amount := item.Price * float64(preOrder.ItemQtyIds[item.ID])
+		totalPrice += amount
+		orderItem := model.OrderItem{
+			ID:             helper.GenerateULID(),
+			OrderID:        orderId,
+			MerchantID:     item.MerchantID,
+			MerchantItemID: item.ID,
+			Price:          item.Price,
+			Quantity:       preOrder.ItemQtyIds[item.ID],
+			Amount:         amount,
+		}
+		orderItems = append(orderItems, orderItem)
+		mapMerchantLocation[item.MerchantID] = item.Merchant().Location()
+	}
+
+	//EstimateDeliveryTimeTSP
+	merchantLocation := getMerchantLocation(mapMerchantLocation, preOrder)
+	estimateDeliveryTIme, err := EstimateDeliveryTimeTSP(merchantLocation, preOrder.UserLocation)
+	if err != nil {
+		return model.Order{}, err
+	}
+
+	order := model.Order{
+		ID:           orderId,
+		TotalPrice:   totalPrice,
+		DeliveryTime: int(math.Round(estimateDeliveryTIme.Minutes())),
+		IsOrder:      false,
+		UserLocLat:   preOrder.UserLocation.Lat,
+		UserLocLong:  preOrder.UserLocation.Long,
+		OrderItems:   orderItems,
+	}
+	return order, nil
+}
+
+func getMerchantLocation(mapMerchantLocation map[string]merchantModel.Location, orderData dto.PreOrder) []merchantModel.Location {
+	merchantLocation := append([]merchantModel.Location{}, mapMerchantLocation[orderData.MerchantStartingPointId])
 	for key, item := range mapMerchantLocation {
 		if key != orderData.MerchantStartingPointId {
 			merchantLocation = append(merchantLocation, item)
@@ -54,8 +89,8 @@ func getMerchantLocation(mapMerchantLocation map[string]model.Location, orderDat
 	return merchantLocation
 }
 
-func validationOrderEstimate(ctx context.Context, request dto.OrderEstimateRequest, o orderService) (dto.OrderEstimateProcess, error) {
-	var orderData dto.OrderEstimateProcess
+func validationOrderEstimate(ctx context.Context, request dto.OrderEstimateRequest, o orderService) (dto.PreOrder, error) {
+	var preOrder dto.PreOrder
 	merchantIds := make(map[string]struct{})
 	itemQtyIds := make(map[string]int)
 	for _, order := range request.Orders {
@@ -69,25 +104,26 @@ func validationOrderEstimate(ctx context.Context, request dto.OrderEstimateReque
 	//if none are true, or true > 1 items, it's not valid
 	merchantStartingPointId, err := validateStartingPoints(request)
 	if err != nil {
-		return orderData, err
+		return preOrder, err
 	}
 
 	//Get Merchant Item in merchant id and item id
 	merchantItems, err := o.orderRepository.GetMerchantItems(ctx, buildParams(merchantIds, itemQtyIds))
 	if err != nil {
-		return orderData, err
+		return preOrder, err
 	}
 
 	// 404 if merchantId / itemId is not found
 	err = isValidMerchantData(merchantIds, itemQtyIds, merchantItems)
 	if err != nil {
-		return orderData, err
+		return preOrder, err
 	}
 
-	orderData.ItemQtyIds = itemQtyIds
-	orderData.MerchantItems = merchantItems
-	orderData.MerchantStartingPointId = merchantStartingPointId
-	return orderData, nil
+	preOrder.ItemQtyIds = itemQtyIds
+	preOrder.MerchantItems = merchantItems
+	preOrder.MerchantStartingPointId = merchantStartingPointId
+	preOrder.UserLocation = request.UserLocation
+	return preOrder, nil
 }
 
 func buildParams(merchantIds map[string]struct{}, itemIds map[string]int) []interface{} {
@@ -135,7 +171,7 @@ func intKeys(m map[string]int) []string {
 }
 
 // Validate Merchant ID and Item ID
-func isValidMerchantData(merchantIds map[string]struct{}, itemIds map[string]int, merchantItems []model.MerchantItem) error {
+func isValidMerchantData(merchantIds map[string]struct{}, itemIds map[string]int, merchantItems []merchantModel.MerchantItem) error {
 	foundMerchants := make(map[string]struct{}, len(merchantIds))
 	foundItems := make(map[string]struct{}, len(itemIds))
 	for _, item := range merchantItems {
