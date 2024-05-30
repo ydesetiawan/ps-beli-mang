@@ -9,4 +9,5 @@ import (
 type OrderRepository interface {
 	GetMerchantItems(ctx context.Context, args []interface{}) ([]merchantModel.MerchantItem, error)
 	SaveOrder(ctx context.Context, order model.Order) error
+	UpdateIsOrderTrue(ctx context.Context, orderID string) error
 }

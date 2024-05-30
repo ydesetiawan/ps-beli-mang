@@ -14,7 +14,7 @@ func (e ErrDataNotFound) Error() string {
 	return fmt.Sprintf("%s. data_id: %v", e.msg, e.DataId)
 }
 
-func NewErrDataNotFound1(msg string) ErrDataNotFound {
+func NewDefaultErrDataNotFound(msg string) ErrDataNotFound {
 	return ErrDataNotFound{
 		ErrBase: ErrBase{
 			msg:           msg,

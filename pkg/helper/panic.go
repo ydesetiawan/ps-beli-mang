@@ -20,6 +20,6 @@ func Panic400IfError(err error) {
 
 func Panic404IfError(err error) {
 	if err != nil {
-		panic(errs.NewErrDataNotFound1(err.Error()))
+		panic(errs.NewDefaultErrDataNotFound(err.Error()))
 	}
 }

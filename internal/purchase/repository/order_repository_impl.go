@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/net/context"
 	merchantModel "ps-beli-mang/internal/merchant/model"
@@ -61,18 +62,63 @@ const (
 )
 
 func (o orderRepositoryImpl) SaveOrder(ctx context.Context, order model.Order) error {
-	// Insert the order
-	_, err := o.db.ExecContext(ctx, insertOrderQuery, order.ID, order.TotalPrice, order.DeliveryTime, order.IsOrder, order.UserLocLat, order.UserLocLong, time.Now())
+	// Start a transaction
+	tx, err := o.db.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
-		return errs.NewErrInternalServerErrors("Error SaveOrder: %v", err)
+		return errs.NewErrInternalServerErrors("error starting transaction: %w", err)
 	}
+
+	// Insert the order
+	_, err = tx.ExecContext(ctx, insertOrderQuery, order.ID, order.TotalPrice, order.DeliveryTime, order.IsOrder, order.UserLocLat, order.UserLocLong, time.Now())
+	if err != nil {
+		tx.Rollback()
+		return errs.NewErrInternalServerErrors("error inserting order: %w", err)
+	}
+
 	// Insert the order items
 	for _, item := range order.OrderItems {
-		_, err = o.db.ExecContext(ctx, insertOrderItemQuery, item.ID, item.OrderID, item.MerchantID, item.IsStartingPoint, item.MerchantItemID, item.Quantity, item.Price, item.Amount, time.Now())
+		_, err = tx.ExecContext(ctx, insertOrderItemQuery, item.ID, item.OrderID, item.MerchantID, item.IsStartingPoint, item.MerchantItemID, item.Quantity, item.Price, item.Amount, time.Now())
 		if err != nil {
-			return errs.NewErrInternalServerErrors("Error SaveOrderItem: %v", err)
+			err := tx.Rollback()
+			return errs.NewErrInternalServerErrors("error inserting order item: %w", err)
 		}
 	}
 
+	// Commit the transaction
+	if err = tx.Commit(); err != nil {
+		return errs.NewErrInternalServerErrors("error committing transaction: %w", err)
+	}
+
+	return nil
+}
+
+const updateUpdateIsOrderTrueQuery = `
+		WITH order_to_update AS (
+			SELECT id
+			FROM orders
+			WHERE id = $1
+		)
+		UPDATE orders
+		SET is_order = TRUE
+		WHERE id = (SELECT id FROM order_to_update);
+	`
+
+func (o orderRepositoryImpl) UpdateIsOrderTrue(ctx context.Context, orderID string) error {
+	result, err := o.db.ExecContext(ctx, updateUpdateIsOrderTrueQuery, orderID)
+	if err != nil {
+		return errs.NewErrInternalServerErrors("error updating order: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return errs.NewErrInternalServerErrors("error checking rows affected: %w", err)
+	}
+
+	// If no rows were affected, the order ID does not exist
+	if rowsAffected == 0 {
+		return errs.NewDefaultErrDataNotFound("calculatedEstimateId is not found")
+	}
+
+	// If we reach here, the order was updated successfully
 	return nil
 }

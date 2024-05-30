@@ -60,8 +60,9 @@ func buildOrder(orderId string, preOrder dto.PreOrder) (model.Order, error) {
 		mapMerchantLocation[item.MerchantID] = item.Merchant().Location()
 	}
 
-	//EstimateDeliveryTimeTSP
 	merchantLocation := getMerchantLocation(mapMerchantLocation, preOrder)
+
+	//EstimateDeliveryTimeTSP
 	estimateDeliveryTIme, err := EstimateDeliveryTimeTSP(merchantLocation, preOrder.UserLocation)
 	if err != nil {
 		return model.Order{}, err
