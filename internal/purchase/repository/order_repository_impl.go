@@ -142,13 +142,21 @@ func buildOrderHistoryQuery(params dto.OrderDataRequestParams) string {
 	}
 
 	filters = append(filters, "uo.is_order = true")
-
+	limit := 5
+	if params.Limit > 0 {
+		limit = params.Limit
+	}
+	offset := 0
+	if params.Offset > 0 {
+		offset = params.Offset
+	}
 	// Construct query using CTE
 	query := fmt.Sprintf(`
 		WITH user_orders AS (
 			SELECT o.id AS order_id, o.user_id, o.total_price, o.delivery_time, o.is_order, o.created_at AS order_created_at
 			FROM orders o
-			WHERE o.user_id = '%s'
+			WHERE o.user_id = '%s' 
+ 			LIMIT '%d' OFFSET '%d'
 		)
 		SELECT 
 			uo.order_id,
@@ -177,23 +185,13 @@ func buildOrderHistoryQuery(params dto.OrderDataRequestParams) string {
 		JOIN 
 			merchants m ON oi.merchant_id = m.id
 		JOIN 
-			merchant_items mi ON oi.merchant_item_id = mi.id`, params.UserID)
+			merchant_items mi ON oi.merchant_item_id = mi.id`, params.UserID, limit, offset)
 
 	if len(filters) > 0 {
 		query += " WHERE " + strings.Join(filters, " AND ")
 	}
 
 	query += " ORDER BY uo.order_created_at DESC"
-
-	limit := 5
-	if params.Limit > 0 {
-		limit = params.Limit
-	}
-	offset := 0
-	if params.Offset > 0 {
-		offset = params.Offset
-	}
-	query += fmt.Sprintf(" LIMIT %d OFFSET %d", limit, offset)
 
 	return query
 }
