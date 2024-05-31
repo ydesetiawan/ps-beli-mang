@@ -177,6 +177,7 @@ func buildOrderHistoryQuery(params dto.OrderDataRequestParams) string {
 			m.loc_long AS longitude,
 			m.image_url AS merchant_image_url,
 			mi.name AS merchant_item_name,
+			mi.image_url AS merchant_item_image_url,
 			mi.category AS merchant_item_category
 		FROM 
 			user_orders uo
