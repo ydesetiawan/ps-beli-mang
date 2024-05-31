@@ -16,7 +16,7 @@ const (
 	ConvenienceStore      MerchantCategory = "ConvenienceStore"
 )
 
-var merchantCategories []MerchantCategory = []MerchantCategory{
+var merchantCategories = []MerchantCategory{
 	SmallRestaurant,
 	MediumRestaurant,
 	LargeRestaurant,
@@ -40,6 +40,7 @@ type Merchant struct {
 	ImageUrl  string
 	LocLat    float64
 	LocLong   float64
+	GeoHash   string
 	CreatedAt time.Time
 }
 

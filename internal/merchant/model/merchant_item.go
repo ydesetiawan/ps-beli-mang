@@ -15,7 +15,7 @@ const (
 	Additions  ItemCategory = "Additions"
 )
 
-var itemCategories []ItemCategory = []ItemCategory{Beverage, Food, Snack, Condiments, Additions}
+var itemCategories = []ItemCategory{Beverage, Food, Snack, Condiments, Additions}
 
 func (pc ItemCategory) String() string {
 	return string(pc)
