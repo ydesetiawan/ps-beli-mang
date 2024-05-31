@@ -45,15 +45,31 @@ type OrderDataResponse struct {
 }
 
 type MerchantRequestParams struct {
-	MerchantID       string `query:"merchantId"`
-	Limit            int    `query:"limit"`
-	Offset           int    `query:"offset"`
-	Name             string `query:"name"`
-	MerchantCategory string `query:"merchantCategory"`
-	UserID           string `query:"-"`
+	MerchantID       string         `query:"merchantId"`
+	Limit            int            `query:"limit"`
+	Offset           int            `query:"offset"`
+	Name             string         `query:"name"`
+	MerchantCategory string         `query:"merchantCategory"`
+	UserID           string         `query:"-"`
+	UserLocation     model.Location `query:"-"`
 }
 
 type GetNearbyMerchantResponse struct {
-	Merchant Merchant       `json:"merchant"`
-	Items    []MerchantItem `json:"items"`
+	Distance       float64        `json:"-"`
+	Merchant       Merchant       `json:"-"`
+	MerchantShow   interface{}    `json:"merchant"`
+	Items          []MerchantItem `json:"items"`
+	IsMerchantShow bool           `json:"-"`
+}
+
+func (po *GetNearbyMerchantResponse) SetDistance(distance float64) {
+	po.Distance = distance
+}
+
+func (po *GetNearbyMerchantResponse) SetMerchantShow() {
+	if po.IsMerchantShow {
+		po.MerchantShow = po.Merchant
+	} else {
+		po.MerchantShow = nil
+	}
 }

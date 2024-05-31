@@ -2,13 +2,17 @@ package handler
 
 import (
 	"github.com/labstack/echo/v4"
+	merchantModel "ps-beli-mang/internal/merchant/model"
 	"ps-beli-mang/internal/purchase/dto"
 	"ps-beli-mang/internal/purchase/service"
 	"ps-beli-mang/internal/user/model"
 	userService "ps-beli-mang/internal/user/service"
 	"ps-beli-mang/pkg/base/handler"
+	"ps-beli-mang/pkg/errs"
 	"ps-beli-mang/pkg/helper"
 	"ps-beli-mang/pkg/httphelper/response"
+	"strconv"
+	"strings"
 )
 
 type PurchaseHandler struct {
@@ -37,12 +41,38 @@ func hasAuthorizeRoleUser(ctx echo.Context, h *PurchaseHandler) (string, error) 
 	return userId, nil
 }
 
+func getUserLocation(c echo.Context) (merchantModel.Location, error) {
+	defaultResponse := merchantModel.Location{}
+	locArr := strings.Split(c.ParamValues()[0], ",")
+	if len(locArr) != 2 {
+		return defaultResponse, errs.NewErrBadRequest("Invalid latitude, longitude")
+	}
+	latStr := locArr[0]
+	longStr := locArr[1]
+
+	// Convert latitude and longitude strings to float64
+	lat, err := strconv.ParseFloat(latStr, 64)
+	if err != nil {
+		return defaultResponse, errs.NewErrBadRequest("Invalid latitude")
+	}
+
+	long, err := strconv.ParseFloat(longStr, 64)
+	if err != nil {
+		return defaultResponse, errs.NewErrBadRequest("Invalid longitude")
+	}
+
+	return merchantModel.Location{Lat: lat, Long: long}, nil
+}
+
 func (h *PurchaseHandler) GetNearbyMerchant(ctx echo.Context) *response.WebResponse {
 	_, err := hasAuthorizeRoleUser(ctx, h)
 	helper.PanicIfError(err, "user unauthorized")
 
 	var params = new(dto.MerchantRequestParams)
 	err = ctx.Bind(params)
+	helper.Panic400IfError(err)
+
+	params.UserLocation, err = getUserLocation(ctx)
 	helper.Panic400IfError(err)
 
 	result, err := h.orderService.GetNearbyMerchants(ctx.Request().Context(), *params)
