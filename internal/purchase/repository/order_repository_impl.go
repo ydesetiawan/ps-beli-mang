@@ -265,14 +265,18 @@ func (o orderRepositoryImpl) GetOrdersByUser(ctx context.Context, params dto.Ord
 				CreatedAt: raw.MerchantCreatedAt,
 			}
 
+			isMerchantShow := true
 			if "" != params.Name && !matchesName(raw.MerchantName, params.Name) {
-				newMerchant = dto.Merchant{}
+				isMerchantShow = false
 			}
 
 			newPurchaseOrder := dto.PurchaseOrder{
-				Merchant: &newMerchant,
-				Items:    []dto.PurchaseItem{},
+				Merchant:       newMerchant,
+				Items:          []dto.PurchaseItem{},
+				IsMerchantShow: isMerchantShow,
 			}
+
+			newPurchaseOrder.SetMerchantShow()
 
 			orderData.Orders = append(orderData.Orders, newPurchaseOrder)
 			existingPurchaseOrderIndex = len(orderData.Orders) - 1

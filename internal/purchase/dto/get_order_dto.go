@@ -25,8 +25,18 @@ type PurchaseItem struct {
 }
 
 type PurchaseOrder struct {
-	Merchant *Merchant      `json:"merchant"`
-	Items    []PurchaseItem `json:"items"`
+	Merchant       Merchant       `json:"-"`
+	MerchantShow   interface{}    `json:"merchant"`
+	Items          []PurchaseItem `json:"items"`
+	IsMerchantShow bool           `json:"-"`
+}
+
+func (po *PurchaseOrder) SetMerchantShow() {
+	if po.IsMerchantShow {
+		po.MerchantShow = po.Merchant
+	} else {
+		po.MerchantShow = nil
+	}
 }
 
 type OrderDataResponse struct {
