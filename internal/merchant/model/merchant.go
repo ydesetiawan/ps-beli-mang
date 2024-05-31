@@ -46,6 +46,8 @@ type Merchant struct {
 
 type SortType string
 
+const CACHE_KEY_ALL_MERCHANTS = "all_merchants"
+
 const (
 	SortTypeAsc  SortType = "asc"
 	SortTypeDesc SortType = "desc"

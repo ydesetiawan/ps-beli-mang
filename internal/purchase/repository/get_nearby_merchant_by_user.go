@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"golang.org/x/net/context"
 	"ps-beli-mang/internal/merchant/model"
 	"ps-beli-mang/internal/purchase/dto"
@@ -31,10 +32,18 @@ const getAllMerchantQuery = `
 	`
 
 func (o orderRepositoryImpl) GetNearbyMerchantByUser(ctx context.Context, params dto.MerchantRequestParams) ([]dto.GetNearbyMerchantResponse, error) {
+
 	return o.getAllMerchants(ctx)
 }
 
 func (o orderRepositoryImpl) getAllMerchants(ctx context.Context) ([]dto.GetNearbyMerchantResponse, error) {
+	// Try to get data from cache
+	if cachedData, found := o.cache.Get(model.CACHE_KEY_ALL_MERCHANTS); found {
+		fmt.Println("Cache hit")
+		return cachedData.([]dto.GetNearbyMerchantResponse), nil
+	}
+
+	fmt.Println("Cache miss")
 
 	var rawResults []struct {
 		MerchantID        string    `db:"merchant_id"`
@@ -106,6 +115,8 @@ func (o orderRepositoryImpl) getAllMerchants(ctx context.Context) ([]dto.GetNear
 	for _, merchant := range merchantsMap {
 		response = append(response, *merchant)
 	}
+
+	o.cache.Set(model.CACHE_KEY_ALL_MERCHANTS, response, 3*time.Minute)
 
 	return response, nil
 }

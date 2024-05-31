@@ -39,7 +39,7 @@ func estimateDeliveryTimeMulti(waypoints []model.Location) (time.Duration, error
 		end := waypoints[i+1]
 
 		// Calculate distance between consecutive waypoints
-		distance := haversineDistance(start.Lat, start.Long, end.Lat, end.Long)
+		distance := HaversineDistance(start.Lat, start.Long, end.Lat, end.Long)
 		totalDistance += distance
 	}
 
@@ -57,7 +57,7 @@ func estimateDeliveryTimeMulti(waypoints []model.Location) (time.Duration, error
 }
 
 // haversineDistance calculates the distance between two points using the Haversine formula
-func haversineDistance(lat1, lon1, lat2, lon2 float64) float64 {
+func HaversineDistance(lat1, lon1, lat2, lon2 float64) float64 {
 	// Convert latitude and longitude from degrees to radians
 	lat1Rad := degToRad(lat1)
 	lon1Rad := degToRad(lon1)
@@ -99,7 +99,7 @@ func nearestNeighbor(waypoints []model.Location) []model.Location {
 
 		for i, location := range waypoints {
 			if !visited[i] {
-				distance := haversineDistance(current.Lat, current.Long, location.Lat, location.Long)
+				distance := HaversineDistance(current.Lat, current.Long, location.Lat, location.Long)
 				if distance < minDistance {
 					minDistance = distance
 					nearestIndex = i

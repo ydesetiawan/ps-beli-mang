@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"github.com/jmoiron/sqlx"
+	"github.com/patrickmn/go-cache"
 	"golang.org/x/net/context"
 	merchantModel "ps-beli-mang/internal/merchant/model"
 	"ps-beli-mang/internal/purchase/model"
@@ -11,11 +12,13 @@ import (
 )
 
 type orderRepositoryImpl struct {
-	db *sqlx.DB
+	db    *sqlx.DB
+	cache *cache.Cache
 }
 
 func NewOrderRepositoryImpl(db *sqlx.DB) OrderRepository {
-	return &orderRepositoryImpl{db: db}
+	c := cache.New(3*time.Minute, 6*time.Minute)
+	return &orderRepositoryImpl{db: db, cache: c}
 }
 
 const queryCheckMerchantItem = `
