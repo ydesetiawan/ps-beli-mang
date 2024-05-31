@@ -40,6 +40,54 @@ func (o orderService) OrderEstimate(ctx context.Context, request dto.OrderEstima
 
 }
 
+func validationOrderEstimate(ctx context.Context, request dto.OrderEstimateRequest, o orderService) (dto.PreOrder, error) {
+	var preOrder dto.PreOrder
+	merchantIds := make(map[string]struct{})
+	itemQtyIds := make(map[string]int)
+	for _, order := range request.Orders {
+		merchantIds[order.MerchantID] = struct{}{}
+		for _, item := range order.Items {
+			itemQtyIds[item.ItemID] = item.Quantity
+		}
+	}
+
+	//isStartingPoint not null | there's should be one isStartingPoint == true in orders array
+	//if none are true, or true > 1 items, it's not valid
+	merchantStartingPointId, err := validateStartingPoints(request)
+	if err != nil {
+		return preOrder, err
+	}
+
+	//Get Merchant Item in merchant id and item id
+	merchantItems, err := o.orderRepository.GetMerchantItems(ctx, buildParams(merchantIds, itemQtyIds))
+	if err != nil {
+		return preOrder, err
+	}
+
+	// 404 if merchantId / itemId is not found
+	err = isValidMerchantData(merchantIds, itemQtyIds, merchantItems)
+	if err != nil {
+		return preOrder, err
+	}
+
+	//Prepare Order Data
+	preOrder.ItemQtyIds = itemQtyIds
+	preOrder.MerchantItems = merchantItems
+	preOrder.MerchantStartingPointId = merchantStartingPointId
+	preOrder.UserLocation = request.UserLocation
+	preOrder.UserID = request.UserID
+	return preOrder, nil
+}
+
+func buildParams(merchantIds map[string]struct{}, itemIds map[string]int) []interface{} {
+	var args []interface{}
+
+	merchantIdList := helper.Keys(merchantIds)
+	itemIdList := helper.IntKeys(itemIds)
+	args = append(args, pq.Array(merchantIdList), pq.Array(itemIdList))
+	return args
+}
+
 func buildOrder(orderId string, preOrder dto.PreOrder) (model.Order, error) {
 	totalPrice := 0.0
 	mapMerchantLocation := make(map[string]merchantModel.Location)
@@ -88,53 +136,6 @@ func getMerchantLocation(mapMerchantLocation map[string]merchantModel.Location, 
 	return merchantLocation
 }
 
-func validationOrderEstimate(ctx context.Context, request dto.OrderEstimateRequest, o orderService) (dto.PreOrder, error) {
-	var preOrder dto.PreOrder
-	merchantIds := make(map[string]struct{})
-	itemQtyIds := make(map[string]int)
-	for _, order := range request.Orders {
-		merchantIds[order.MerchantID] = struct{}{}
-		for _, item := range order.Items {
-			itemQtyIds[item.ItemID] = item.Quantity
-		}
-	}
-
-	//isStartingPoint not null | there's should be one isStartingPoint == true in orders array
-	//if none are true, or true > 1 items, it's not valid
-	merchantStartingPointId, err := validateStartingPoints(request)
-	if err != nil {
-		return preOrder, err
-	}
-
-	//Get Merchant Item in merchant id and item id
-	merchantItems, err := o.orderRepository.GetMerchantItems(ctx, buildParams(merchantIds, itemQtyIds))
-	if err != nil {
-		return preOrder, err
-	}
-
-	// 404 if merchantId / itemId is not found
-	err = isValidMerchantData(merchantIds, itemQtyIds, merchantItems)
-	if err != nil {
-		return preOrder, err
-	}
-
-	preOrder.ItemQtyIds = itemQtyIds
-	preOrder.MerchantItems = merchantItems
-	preOrder.MerchantStartingPointId = merchantStartingPointId
-	preOrder.UserLocation = request.UserLocation
-	preOrder.UserID = request.UserID
-	return preOrder, nil
-}
-
-func buildParams(merchantIds map[string]struct{}, itemIds map[string]int) []interface{} {
-	var args []interface{}
-
-	merchantIdList := keys(merchantIds)
-	itemIdList := intKeys(itemIds)
-	args = append(args, pq.Array(merchantIdList), pq.Array(itemIdList))
-	return args
-}
-
 // Return merchantStartingPointId, error
 func validateStartingPoints(request dto.OrderEstimateRequest) (string, error) {
 	// Validate there's exactly one isStartingPoint == true
@@ -152,22 +153,6 @@ func validateStartingPoints(request dto.OrderEstimateRequest) (string, error) {
 	}
 
 	return merchantStartingPointId, nil
-}
-
-func keys(m map[string]struct{}) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	return keys
-}
-
-func intKeys(m map[string]int) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	return keys
 }
 
 // Validate Merchant ID and Item ID

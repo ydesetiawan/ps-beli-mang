@@ -15,7 +15,7 @@ func (o orderService) GetNearbyMerchants(ctx context.Context, params dto.Merchan
 	}
 
 	merchants = filterMerchants(merchants, params)
-	merchants = filterMerchantsWithOffsetAndLimit(merchants, params)
+	merchants = filterMerchantsWithOffsetAndLimitAndSortDistance(merchants, params)
 
 	return merchants, nil
 }
@@ -62,8 +62,9 @@ func filterMerchants(merchants []dto.GetNearbyMerchantResponse, params dto.Merch
 	return filtered
 }
 
-func filterMerchantsWithOffsetAndLimit(filtered []dto.GetNearbyMerchantResponse, params dto.MerchantRequestParams) []dto.GetNearbyMerchantResponse {
+func filterMerchantsWithOffsetAndLimitAndSortDistance(filtered []dto.GetNearbyMerchantResponse, params dto.MerchantRequestParams) []dto.GetNearbyMerchantResponse {
 
+	//Sort Distance
 	sort.Slice(filtered, func(i, j int) bool {
 		return filtered[i].Distance < filtered[j].Distance
 	})
