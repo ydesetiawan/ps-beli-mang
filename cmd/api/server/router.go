@@ -24,7 +24,7 @@ func (s *Server) setupRouter(e *echo.Echo) {
 	usersV1.GET("/orders", s.baseHandler.RunActionAuth(s.purchaseHandler.GetOrders))
 
 	e.POST("/image", s.baseHandler.RunActionAuth(s.imageHandler.UploadImage))
-	e.GET("/merchants/nearby/:lat,:long", s.baseHandler.RunActionAuth(s.purchaseHandler.GetNearMerchant))
+	e.GET("/merchants/nearby/:lat,:long", s.baseHandler.RunActionAuth(s.purchaseHandler.GetNearbyMerchant))
 	e.GET("/health", func(c echo.Context) error {
 		return c.HTML(http.StatusOK, "Health Check OK")
 	})

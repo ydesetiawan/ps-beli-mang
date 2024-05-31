@@ -11,5 +11,6 @@ type OrderRepository interface {
 	GetMerchantItems(ctx context.Context, args []interface{}) ([]merchantModel.MerchantItem, error)
 	SaveOrder(ctx context.Context, order model.Order) error
 	UpdateOrderSetIsOrderTrue(ctx context.Context, orderID string) error
-	GetOrdersByUser(ctx context.Context, params dto.OrderDataRequestParams) ([]dto.OrderDataResponse, error)
+	GetNearbyMerchantByUser(ctx context.Context, params dto.MerchantRequestParams) ([]dto.GetNearbyMerchantResponse, error)
+	GetOrdersByUser(ctx context.Context, params dto.MerchantRequestParams) ([]dto.OrderDataResponse, error)
 }

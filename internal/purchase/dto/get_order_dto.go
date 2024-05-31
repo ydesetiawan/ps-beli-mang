@@ -14,7 +14,7 @@ type Merchant struct {
 	CreatedAt        time.Time      `json:"createdAt"` // use time.Time to parse ISO 8601 format
 }
 
-type PurchaseItem struct {
+type MerchantItem struct {
 	ItemID          string    `json:"itemId"`
 	Name            string    `json:"name"`
 	ProductCategory string    `json:"productCategory"`
@@ -27,7 +27,7 @@ type PurchaseItem struct {
 type PurchaseOrder struct {
 	Merchant       Merchant       `json:"-"`
 	MerchantShow   interface{}    `json:"merchant"`
-	Items          []PurchaseItem `json:"items"`
+	Items          []MerchantItem `json:"items"`
 	IsMerchantShow bool           `json:"-"`
 }
 
@@ -44,11 +44,16 @@ type OrderDataResponse struct {
 	Orders  []PurchaseOrder `json:"orders"`
 }
 
-type OrderDataRequestParams struct {
+type MerchantRequestParams struct {
 	MerchantID       string `query:"merchantId"`
 	Limit            int    `query:"limit"`
 	Offset           int    `query:"offset"`
 	Name             string `query:"name"`
 	MerchantCategory string `query:"merchantCategory"`
 	UserID           string `query:"-"`
+}
+
+type GetNearbyMerchantResponse struct {
+	Merchant Merchant       `json:"merchant"`
+	Items    []MerchantItem `json:"items"`
 }

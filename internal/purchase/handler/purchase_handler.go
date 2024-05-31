@@ -37,11 +37,22 @@ func hasAuthorizeRoleUser(ctx echo.Context, h *PurchaseHandler) (string, error) 
 	return userId, nil
 }
 
-func (h *PurchaseHandler) GetNearMerchant(ctx echo.Context) *response.WebResponse {
+func (h *PurchaseHandler) GetNearbyMerchant(ctx echo.Context) *response.WebResponse {
 	_, err := hasAuthorizeRoleUser(ctx, h)
 	helper.PanicIfError(err, "user unauthorized")
 
-	return nil
+	var params = new(dto.MerchantRequestParams)
+	err = ctx.Bind(params)
+	helper.Panic400IfError(err)
+
+	result, err := h.orderService.GetNearbyMerchants(ctx.Request().Context(), *params)
+	helper.PanicIfError(err, "GetNearbyMerchant failed")
+
+	return &response.WebResponse{
+		Status:  200,
+		Message: "GetNearbyMerchant Successfully",
+		Data:    result,
+	}
 }
 
 func (h *PurchaseHandler) OrderEstimate(ctx echo.Context) *response.WebResponse {
@@ -87,7 +98,7 @@ func (h *PurchaseHandler) GetOrders(ctx echo.Context) *response.WebResponse {
 	userID, err := hasAuthorizeRoleUser(ctx, h)
 	helper.PanicIfError(err, "user unauthorized")
 
-	var params = new(dto.OrderDataRequestParams)
+	var params = new(dto.MerchantRequestParams)
 	err = ctx.Bind(params)
 	helper.Panic400IfError(err)
 
