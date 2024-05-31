@@ -111,7 +111,7 @@ func (o orderRepositoryImpl) GetAllMerchants(ctx context.Context) ([]dto.GetNear
 		response = append(response, *merchant)
 	}
 
-	o.cache.Set(model.CACHE_KEY_ALL_MERCHANTS, response, 3*time.Minute)
+	o.cache.Set(model.CACHE_KEY_ALL_MERCHANTS, response, 5*time.Minute)
 
 	return response, nil
 }

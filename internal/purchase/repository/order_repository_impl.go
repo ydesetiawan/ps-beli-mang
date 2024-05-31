@@ -17,7 +17,7 @@ type orderRepositoryImpl struct {
 }
 
 func NewOrderRepositoryImpl(db *sqlx.DB) OrderRepository {
-	c := cache.New(3*time.Minute, 6*time.Minute)
+	c := cache.New(5*time.Minute, 10*time.Minute)
 	return &orderRepositoryImpl{db: db, cache: c}
 }
 
