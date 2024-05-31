@@ -165,6 +165,9 @@ func buildOrderHistoryQuery(params dto.OrderDataRequestParams) string {
 			oi.created_at AS order_item_created_at,
 			m.name AS merchant_name,
 			m.merchant_category,
+			m.loc_lat AS latitude,
+			m.loc_long AS longitude,
+			m.image_url AS merchant_image_url,
 			mi.name AS merchant_item_name,
 			mi.category AS merchant_item_category
 		FROM 
@@ -209,10 +212,10 @@ func (o orderRepositoryImpl) GetOrdersByUser(ctx context.Context, params dto.Ord
 		MerchantID           string    `db:"merchant_id"`
 		MerchantName         string    `db:"merchant_name"`
 		MerchantCategory     string    `db:"merchant_category"`
-		MerchantImageURL     string    `db:"image_url"`
+		MerchantImageURL     string    `db:"merchant_image_url"`
 		Latitude             float64   `db:"latitude"`
 		Longitude            float64   `db:"longitude"`
-		MerchantCreatedAt    time.Time `db:"created_at"`
+		MerchantCreatedAt    time.Time `db:"merchant_created_at"`
 		MerchantItemID       string    `db:"merchant_item_id"`
 		MerchantItemName     string    `db:"merchant_item_name"`
 		MerchantItemCategory string    `db:"merchant_item_category"`
@@ -239,15 +242,17 @@ func (o orderRepositoryImpl) GetOrdersByUser(ctx context.Context, params dto.Ord
 
 		orderData := orderMap[raw.OrderID]
 
-		var existingPurchaseOrder *dto.PurchaseOrder
+		var existingPurchaseOrderIndex int
+		var existingPurchaseOrderFound bool
 		for i := range orderData.Orders {
 			if orderData.Orders[i].Merchant.MerchantID == raw.MerchantID {
-				existingPurchaseOrder = &orderData.Orders[i]
+				existingPurchaseOrderIndex = i
+				existingPurchaseOrderFound = true
 				break
 			}
 		}
 
-		if existingPurchaseOrder == nil {
+		if !existingPurchaseOrderFound {
 			newMerchant := dto.Merchant{
 				MerchantID:       raw.MerchantID,
 				Name:             raw.MerchantName,
@@ -259,12 +264,18 @@ func (o orderRepositoryImpl) GetOrdersByUser(ctx context.Context, params dto.Ord
 				},
 				CreatedAt: raw.MerchantCreatedAt,
 			}
+
+			if "" != params.Name && !matchesName(raw.MerchantName, params.Name) {
+				newMerchant = dto.Merchant{}
+			}
+
 			newPurchaseOrder := dto.PurchaseOrder{
-				Merchant: newMerchant,
+				Merchant: &newMerchant,
 				Items:    []dto.PurchaseItem{},
 			}
+
 			orderData.Orders = append(orderData.Orders, newPurchaseOrder)
-			existingPurchaseOrder = &newPurchaseOrder
+			existingPurchaseOrderIndex = len(orderData.Orders) - 1
 		}
 
 		purchaseItem := dto.PurchaseItem{
@@ -277,7 +288,12 @@ func (o orderRepositoryImpl) GetOrdersByUser(ctx context.Context, params dto.Ord
 			CreatedAt:       raw.OrderItemCreatedAt,
 		}
 
-		existingPurchaseOrder.Items = append(existingPurchaseOrder.Items, purchaseItem)
+		if "" != params.Name && !matchesName(raw.MerchantItemName, params.Name) {
+			//Nothing
+		} else {
+			orderData.Orders[existingPurchaseOrderIndex].Items = append(orderData.Orders[existingPurchaseOrderIndex].Items, purchaseItem)
+		}
+
 	}
 
 	var results []dto.OrderDataResponse
@@ -286,4 +302,8 @@ func (o orderRepositoryImpl) GetOrdersByUser(ctx context.Context, params dto.Ord
 	}
 
 	return results, nil
+}
+
+func matchesName(name, filter string) bool {
+	return strings.Contains(strings.ToLower(name), strings.ToLower(filter))
 }

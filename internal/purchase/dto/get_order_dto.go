@@ -25,7 +25,7 @@ type PurchaseItem struct {
 }
 
 type PurchaseOrder struct {
-	Merchant Merchant       `json:"merchant"`
+	Merchant *Merchant      `json:"merchant"`
 	Items    []PurchaseItem `json:"items"`
 }
 
