@@ -13,4 +13,5 @@ type OrderRepository interface {
 	UpdateOrderSetIsOrderTrue(ctx context.Context, orderID string) error
 	GetNearbyMerchantByUser(ctx context.Context, params dto.MerchantRequestParams) ([]dto.GetNearbyMerchantResponse, error)
 	GetOrdersByUser(ctx context.Context, params dto.MerchantRequestParams) ([]dto.OrderDataResponse, error)
+	GetAllMerchants(ctx context.Context) ([]dto.GetNearbyMerchantResponse, error)
 }
