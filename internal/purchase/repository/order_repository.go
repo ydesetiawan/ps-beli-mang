@@ -1,10 +1,11 @@
 package repository
 
 import (
-	"golang.org/x/net/context"
 	merchantModel "ps-beli-mang/internal/merchant/model"
 	"ps-beli-mang/internal/purchase/dto"
 	"ps-beli-mang/internal/purchase/model"
+
+	"golang.org/x/net/context"
 )
 
 type OrderRepository interface {
@@ -14,4 +15,5 @@ type OrderRepository interface {
 	GetNearbyMerchantByUser(ctx context.Context, params dto.MerchantRequestParams) ([]dto.GetNearbyMerchantResponse, error)
 	GetOrdersByUser(ctx context.Context, params dto.MerchantRequestParams) ([]dto.OrderDataResponse, error)
 	GetAllMerchants(ctx context.Context) ([]dto.GetNearbyMerchantResponse, error)
+	ClearCache()
 }

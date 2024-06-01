@@ -1,9 +1,12 @@
 package helper
 
 import (
-	"github.com/oklog/ulid/v2"
 	"math/rand"
+	"regexp"
 	"time"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/oklog/ulid/v2"
 )
 
 func Keys(m map[string]struct{}) []string {
@@ -28,4 +31,17 @@ func GenerateULID() string {
 
 	return ulid.MustNew(ms, entropy).String()
 
+}
+
+func ValidateURL(fl validator.FieldLevel) bool {
+	url, ok := fl.Field().Interface().(string)
+	if !ok {
+		// Field is not a string
+		return false
+	}
+	// Define the regex pattern
+	pattern := `^(http|https):\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}(\/\S*)?$`
+	// Match the regex pattern
+	matched, _ := regexp.MatchString(pattern, url)
+	return matched
 }

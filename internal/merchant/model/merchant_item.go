@@ -40,14 +40,13 @@ func ValidMerchantItemCategory(category string) bool {
 }
 
 type MerchantItem struct {
-	ID         string
-	Name       string
-	Category   ItemCategory
-	ImageUrl   string
-	Price      float64
-	CreatedAt  time.Time
-	CreatedBy  string
-	MerchantID string
+	ID         string       `db:"id"`
+	Name       string       `db:"name"`
+	Category   ItemCategory `db:"category"`
+	ImageUrl   string       `db:"image_url"`
+	Price      float64      `db:"price"`
+	CreatedAt  time.Time    `db:"created_at"`
+	MerchantID string       `db:"merchant_id"`
 	merchant   Merchant
 }
 

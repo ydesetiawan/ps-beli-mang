@@ -2,13 +2,14 @@ package repository
 
 import (
 	"database/sql"
-	"github.com/jmoiron/sqlx"
-	"github.com/patrickmn/go-cache"
-	"golang.org/x/net/context"
 	merchantModel "ps-beli-mang/internal/merchant/model"
 	"ps-beli-mang/internal/purchase/model"
 	"ps-beli-mang/pkg/errs"
 	"time"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/patrickmn/go-cache"
+	"golang.org/x/net/context"
 )
 
 type orderRepositoryImpl struct {
@@ -124,4 +125,8 @@ func (o orderRepositoryImpl) UpdateOrderSetIsOrderTrue(ctx context.Context, orde
 
 	// If we reach here, the order was updated successfully
 	return nil
+}
+
+func (o orderRepositoryImpl) ClearCache() {
+	o.cache.Flush()
 }
