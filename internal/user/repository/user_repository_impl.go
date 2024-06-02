@@ -43,7 +43,7 @@ func (r *userRepositoryImpl) GetUserByIDAndRole(ctx context.Context, id string, 
 	var user model.User
 	err := r.db.GetContext(ctx, &user, queryGetUserByIDAndRole, id, role)
 	if err != nil {
-		return model.User{}, errs.NewErrInternalServerErrors("execute query error [GetUserByIDAndRole]: ", err.Error())
+		return model.User{}, errs.NewErrUnauthorized("user unauthorized")
 	}
 	return user, err
 }

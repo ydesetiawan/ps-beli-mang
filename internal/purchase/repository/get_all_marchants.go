@@ -17,12 +17,12 @@ const getAllMerchantQuery = `
 			m.loc_lat AS merchant_lat, 
 			m.loc_long AS merchant_long, 
 			m.created_at AS merchant_created_at, 
-			mi.id AS item_id, 
-			mi.name AS item_name, 
-			mi.category AS item_category, 
-			mi.image_url AS item_image_url, 
-			mi.price AS item_price, 
-			mi.created_at AS item_created_at 
+			COALESCE(mi.id, '') AS item_id,  -- Using empty string as a default
+			COALESCE(mi.name, '') AS item_name,  -- Using empty string as a default
+			COALESCE(mi.category, '') AS item_category,  -- Using empty string as a default
+			COALESCE(mi.image_url, '') AS item_image_url,  -- Using empty string as a default
+			COALESCE(mi.price, 0) AS item_price,  -- Using 0 as a default
+			COALESCE(mi.created_at, '1970-01-01') AS item_created_at  -- Using a default date
 		FROM 
 			merchants m 
 		LEFT JOIN 

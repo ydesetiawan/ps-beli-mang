@@ -2,9 +2,11 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"ps-beli-mang/internal/merchant/dto"
 	"ps-beli-mang/internal/merchant/model"
+	"ps-beli-mang/pkg/errs"
 	"ps-beli-mang/pkg/helper"
 	"strings"
 
@@ -90,11 +92,29 @@ func (r *merchantRepositoryImpl) GetMerchants(ctx context.Context, req *dto.Merc
 	return merchants, total, err
 }
 
-const createMerchantItemQuery = `INSERT INTO merchant_items (id, name, category, image_url, price, merchant_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+const createMerchantItemQuery = `
+    WITH MerchantCheck AS (
+        SELECT id
+        FROM merchants
+        WHERE id = $6
+    )
+    INSERT INTO merchant_items (id, name, category, image_url, price, merchant_id)
+    SELECT $1, $2, $3, $4, $5, id
+    FROM MerchantCheck
+    RETURNING id;
+    `
 
 func (r *merchantRepositoryImpl) CreateMerchantItem(ctx context.Context, merchantId string, req *dto.MerchantItemDto) (id string, err error) {
 	err = r.db.QueryRowContext(ctx, createMerchantItemQuery, helper.GenerateULID(), req.Name, req.ProductCategory, req.ImageUrl, req.Price, merchantId).Scan(&id)
-	return id, err
+	if err != nil {
+		if sql.ErrNoRows == err {
+			return "", errs.NewErrDataNotFound("No matching merchant found or no row inserted.", req.MerchantId, errs.ErrorData{})
+		} else {
+			return "", errs.NewErrInternalServerErrors("error insert merchant item", req)
+		}
+	}
+	return id, nil
+
 }
 
 const (

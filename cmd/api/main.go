@@ -134,7 +134,7 @@ func initInfra() {
 	orderRepository := purchaserepository.NewOrderRepositoryImpl(db)
 
 	merchantService := merchantservice.NewMerchantServiceImpl(merchantRepository, orderRepository)
-	merchantHandler = merchanthandler.NewMerchantHandler(merchantService)
+	merchantHandler = merchanthandler.NewMerchantHandler(merchantService, userService)
 
 	orderService := purchaseservice.NewOrderServiceImpl(orderRepository)
 	purchaseHandler = purchasehandler.NewPurchaseHandler(orderService, userService)

@@ -3,6 +3,9 @@ package handler
 import (
 	"ps-beli-mang/internal/merchant/dto"
 	"ps-beli-mang/internal/merchant/service"
+	"ps-beli-mang/internal/user/model"
+	userService "ps-beli-mang/internal/user/service"
+	"ps-beli-mang/pkg/base/handler"
 	"ps-beli-mang/pkg/helper"
 	"ps-beli-mang/pkg/httphelper/response"
 	"time"
@@ -12,17 +15,36 @@ import (
 
 type MerchantHandler struct {
 	merchantService service.MerchantService
+	userService     userService.UserService
 }
 
-func NewMerchantHandler(merchantService service.MerchantService) *MerchantHandler {
+func NewMerchantHandler(merchantService service.MerchantService, userService userService.UserService) *MerchantHandler {
 	return &MerchantHandler{
 		merchantService: merchantService,
+		userService:     userService,
 	}
 }
 
+func hasAuthorizeRoleAdmin(ctx echo.Context, h *MerchantHandler) (string, error) {
+	userId, err := handler.GetUserId(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = h.userService.GetUserByIdAndRole(ctx.Request().Context(), userId, string(model.ADMIN))
+	if err != nil {
+		return "", err
+	}
+
+	return userId, nil
+}
+
 func (h *MerchantHandler) GetMerchant(ctx echo.Context) *response.WebResponse {
+	_, err := hasAuthorizeRoleAdmin(ctx, h)
+	helper.PanicIfError(err, "user unauthorized")
+
 	filter := dto.MerchantQuery{}
-	err := ctx.Bind(&filter)
+	err = ctx.Bind(&filter)
 	helper.Panic400IfError(err)
 
 	filter.Validate()
@@ -65,8 +87,11 @@ func (h *MerchantHandler) GetMerchant(ctx echo.Context) *response.WebResponse {
 }
 
 func (h *MerchantHandler) CreateMerchant(ctx echo.Context) *response.WebResponse {
+	_, err := hasAuthorizeRoleAdmin(ctx, h)
+	helper.PanicIfError(err, "user unauthorized")
+
 	request := dto.MerchantDto{}
-	err := ctx.Bind(&request)
+	err = ctx.Bind(&request)
 	helper.Panic400IfError(err)
 
 	err = dto.ValidateMerchantReq(&request)
@@ -84,8 +109,11 @@ func (h *MerchantHandler) CreateMerchant(ctx echo.Context) *response.WebResponse
 }
 
 func (h *MerchantHandler) CreateMerchantItem(ctx echo.Context) *response.WebResponse {
+	_, err := hasAuthorizeRoleAdmin(ctx, h)
+	helper.PanicIfError(err, "user unauthorized")
+
 	request := dto.MerchantItemDto{}
-	err := ctx.Bind(&request)
+	err = ctx.Bind(&request)
 	helper.Panic400IfError(err)
 
 	err = dto.ValidateMerchantItemReq(&request)
@@ -103,8 +131,11 @@ func (h *MerchantHandler) CreateMerchantItem(ctx echo.Context) *response.WebResp
 }
 
 func (h *MerchantHandler) GetMerchantItem(ctx echo.Context) *response.WebResponse {
+	_, err := hasAuthorizeRoleAdmin(ctx, h)
+	helper.PanicIfError(err, "user unauthorized")
+
 	filter := dto.MerchantItemQuery{}
-	err := ctx.Bind(&filter)
+	err = ctx.Bind(&filter)
 	helper.Panic400IfError(err)
 
 	filter.Validate()
