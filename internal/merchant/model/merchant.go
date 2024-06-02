@@ -34,14 +34,13 @@ func (mc MerchantCategory) Valid() bool {
 }
 
 type Merchant struct {
-	ID        string
-	Name      string
-	Category  MerchantCategory
-	ImageUrl  string
-	LocLat    float64
-	LocLong   float64
-	GeoHash   string
-	CreatedAt time.Time
+	ID        string           `db:"id"`
+	Name      string           `db:"name"`
+	Category  MerchantCategory `db:"merchant_category"`
+	ImageUrl  string           `db:"image_url"`
+	LocLat    float64          `db:"loc_lat"`
+	LocLong   float64          `db:"loc_long"`
+	CreatedAt time.Time        `db:"created_at"`
 }
 
 type SortType string

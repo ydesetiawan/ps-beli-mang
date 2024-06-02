@@ -15,6 +15,6 @@ CREATE TABLE merchant_items (
     category VARCHAR(30),
     image_url VARCHAR(2048),
     price NUMERIC NOT NULL ,
-    created_at timestamp,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (merchant_id) REFERENCES merchants(id)
 );

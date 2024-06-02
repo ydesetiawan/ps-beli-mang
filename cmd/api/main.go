@@ -131,10 +131,11 @@ func initInfra() {
 	imageHandler = imagehandler.NewImageHandler(imageService)
 
 	merchantRepository := merchantrepository.NewMerchantRepositoryImpl(db)
-	merchantService := merchantservice.NewMerchantServiceImpl(merchantRepository)
+	orderRepository := purchaserepository.NewOrderRepositoryImpl(db)
+
+	merchantService := merchantservice.NewMerchantServiceImpl(merchantRepository, orderRepository)
 	merchantHandler = merchanthandler.NewMerchantHandler(merchantService)
 
-	orderRepository := purchaserepository.NewOrderRepositoryImpl(db)
 	orderService := purchaseservice.NewOrderServiceImpl(orderRepository)
 	purchaseHandler = purchasehandler.NewPurchaseHandler(orderService, userService)
 

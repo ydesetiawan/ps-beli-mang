@@ -2,14 +2,15 @@ package handler
 
 import (
 	"fmt"
-	"github.com/labstack/echo/v4"
 	"go/types"
-	"golang.org/x/exp/slog"
 	"net/http"
 	"ps-beli-mang/pkg/errs"
 	"ps-beli-mang/pkg/httphelper"
 	"ps-beli-mang/pkg/httphelper/response"
 	"ps-beli-mang/pkg/middleware"
+
+	"github.com/labstack/echo/v4"
+	"golang.org/x/exp/slog"
 )
 
 type HandlerFn func(c echo.Context) *response.WebResponse
@@ -54,14 +55,18 @@ func (h *BaseHTTPHandler) Execute(fn HandlerFn) echo.HandlerFunc {
 
 		resp := fn(c)
 		httpStatus := resp.Status
+		if resp.RawData == nil {
+			httphelper.WriteJSON(c.Response(), httpStatus,
+				response.WebResponse{
+					Token:      resp.Token,
+					Status:     httpStatus,
+					Message:    resp.Message,
+					Data:       resp.Data,
+					Pagination: resp.Pagination})
+		} else {
+			httphelper.WriteJSON(c.Response(), httpStatus, resp.RawData)
+		}
 
-		httphelper.WriteJSON(c.Response(), httpStatus,
-			response.WebResponse{
-				Token:      resp.Token,
-				Status:     httpStatus,
-				Message:    resp.Message,
-				Data:       resp.Data,
-				Pagination: resp.Pagination})
 		return nil
 	}
 }
