@@ -66,7 +66,10 @@ func (r *merchantRepositoryImpl) GetMerchants(ctx context.Context, req *dto.Merc
 		if req.SortCreatedAt == model.SortTypeAsc || req.SortCreatedAt == model.SortTypeDesc {
 			query += fmt.Sprintf(` ORDER BY created_at %s`, req.SortCreatedAt)
 		}
+	} else {
+		query += ` ORDER BY created_at desc`
 	}
+
 	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", len(args)+1, len(args)+2)
 
 	args = append(args, req.Limit, req.Offset)
@@ -155,7 +158,10 @@ func (r *merchantRepositoryImpl) GetMerchantItems(ctx context.Context, merchantI
 		if req.SortCreatedAt == model.SortTypeAsc || req.SortCreatedAt == model.SortTypeDesc {
 			query += fmt.Sprintf(` ORDER BY created_at %s`, req.SortCreatedAt)
 		}
+	} else {
+		query += ` ORDER BY created_at desc`
 	}
+
 	query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", len(args)+1, len(args)+2)
 
 	args = append(args, req.Limit, req.Offset)

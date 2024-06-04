@@ -1,12 +1,13 @@
 package handler
 
 import (
-	"github.com/labstack/echo/v4"
 	"ps-beli-mang/internal/user/dto"
 	"ps-beli-mang/internal/user/model"
 	"ps-beli-mang/internal/user/service"
 	"ps-beli-mang/pkg/helper"
 	"ps-beli-mang/pkg/httphelper/response"
+
+	"github.com/labstack/echo/v4"
 )
 
 type UserHandler struct {
@@ -67,7 +68,7 @@ func (h *UserHandler) Login(ctx echo.Context, role model.Role) *response.WebResp
 	return &response.WebResponse{
 		Status:  200,
 		Message: "User logged successfully",
-		Data:    result,
+		RawData: result,
 	}
 
 }
