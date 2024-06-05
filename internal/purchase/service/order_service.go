@@ -7,7 +7,7 @@ import (
 )
 
 type OrderService interface {
-	GetNearbyMerchants(ctx context.Context, params dto.MerchantRequestParams) ([]dto.GetNearbyMerchantResponse, error)
+	GetNearbyMerchants(ctx context.Context, params dto.MerchantRequestParams) (result []dto.GetNearbyMerchantResponse, total int, err error)
 	OrderEstimate(ctx context.Context, request dto.OrderEstimateRequest) (dto.OrderEstimateResponse, error)
 	CreateOrder(ctx context.Context, request dto.CreateOrderRequest) error
 	GetOrders(ctx context.Context, params dto.MerchantRequestParams) ([]dto.OrderDataResponse, error)

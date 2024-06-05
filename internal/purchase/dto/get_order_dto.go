@@ -54,6 +54,15 @@ type MerchantRequestParams struct {
 	UserLocation     model.Location `query:"-"`
 }
 
+func (f *MerchantRequestParams) Validate() {
+	if f.Limit == 0 {
+		f.Limit = 5
+	}
+	if f.Offset == 0 {
+		f.Offset = 0
+	}
+}
+
 type GetNearbyMerchantResponse struct {
 	Distance       float64        `json:"-"`
 	Merchant       Merchant       `json:"-"`

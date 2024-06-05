@@ -7,17 +7,17 @@ import (
 	"strings"
 )
 
-func (o orderService) GetNearbyMerchants(ctx context.Context, params dto.MerchantRequestParams) ([]dto.GetNearbyMerchantResponse, error) {
+func (o orderService) GetNearbyMerchants(ctx context.Context, params dto.MerchantRequestParams) ([]dto.GetNearbyMerchantResponse, int, error) {
 
 	merchants, err := o.orderRepository.GetAllMerchants(ctx)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	merchants = filterMerchants(merchants, params)
 	merchants = filterMerchantsWithOffsetAndLimitAndSortDistance(merchants, params)
 
-	return merchants, nil
+	return merchants, len(merchants), nil
 }
 
 func filterMerchants(merchants []dto.GetNearbyMerchantResponse, params dto.MerchantRequestParams) []dto.GetNearbyMerchantResponse {

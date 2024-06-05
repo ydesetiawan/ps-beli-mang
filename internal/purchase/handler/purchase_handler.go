@@ -72,16 +72,34 @@ func (h *PurchaseHandler) GetNearbyMerchant(ctx echo.Context) *response.WebRespo
 	err = ctx.Bind(params)
 	helper.Panic400IfError(err)
 
+	params.Validate()
+
 	params.UserLocation, err = getUserLocation(ctx)
 	helper.Panic400IfError(err)
 
-	result, err := h.orderService.GetNearbyMerchants(ctx.Request().Context(), *params)
+	result, total, err := h.orderService.GetNearbyMerchants(ctx.Request().Context(), *params)
 	helper.PanicIfError(err, "GetNearbyMerchant failed")
+
+	type Meta struct {
+		Limit  int `json:"limit"`
+		Offset int `json:"offset"`
+		Total  int `json:"total"`
+	}
 
 	return &response.WebResponse{
 		Status:  200,
 		Message: "GetNearbyMerchant Successfully",
-		Data:    result,
+		RawData: struct {
+			Data []dto.GetNearbyMerchantResponse `json:"data"`
+			Meta Meta                            `json:"meta"`
+		}{
+			Data: result,
+			Meta: Meta{
+				Limit:  params.Limit,
+				Offset: params.Offset,
+				Total:  total,
+			},
+		},
 	}
 }
 

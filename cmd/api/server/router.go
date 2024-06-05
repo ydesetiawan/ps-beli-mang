@@ -14,11 +14,9 @@ func (s *Server) setupRouter(e *echo.Echo) {
 	adminV1.POST("/merchants/:merchantId/items", s.baseHandler.RunActionAuth(s.merchantHandler.CreateMerchantItem))
 	adminV1.GET("/merchants/:merchantId/items", s.baseHandler.RunActionAuth(s.merchantHandler.GetMerchantItem))
 
-	userV1 := e.Group("/user")
-	userV1.POST("/register", s.baseHandler.RunAction(s.userHandler.RegisterUser))
-	userV1.POST("/login", s.baseHandler.RunAction(s.userHandler.LoginUser))
-
 	usersV1 := e.Group("/users")
+	usersV1.POST("/login", s.baseHandler.RunAction(s.userHandler.LoginUser))
+	usersV1.POST("/register", s.baseHandler.RunAction(s.userHandler.RegisterUser))
 	usersV1.POST("/estimate", s.baseHandler.RunActionAuth(s.purchaseHandler.OrderEstimate))
 	usersV1.POST("/orders", s.baseHandler.RunActionAuth(s.purchaseHandler.Order))
 	usersV1.GET("/orders", s.baseHandler.RunActionAuth(s.purchaseHandler.GetOrders))
