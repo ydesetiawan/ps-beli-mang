@@ -33,6 +33,10 @@ jobs:
         with:
           mask-password: 'false'
 
+      - name: Delete existing 'latest' tag in ECR
+        run: |
+          aws ecr batch-delete-image --repository-name ydesetiawan94-repository --image-ids imageTag=latest || echo "No existing tag to delete"
+
       - name: Build, tag, and push Docker image
         env:
           ECR_REGISTRY: 560918124458.dkr.ecr.ap-southeast-1.amazonaws.com/ydesetiawan94-repository
