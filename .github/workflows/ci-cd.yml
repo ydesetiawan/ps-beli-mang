@@ -33,17 +33,22 @@ jobs:
         with:
           mask-password: 'false'
 
-      - name: Delete existing 'latest' tag in ECR
-        run: |
-          aws ecr batch-delete-image --repository-name ydesetiawan94-repository --image-ids imageTag=latest || echo "No existing tag to delete"
-
       - name: Build, tag, and push Docker image
         env:
           ECR_REGISTRY: 560918124458.dkr.ecr.ap-southeast-1.amazonaws.com/ydesetiawan94-repository
         run: |
-          docker build -t ydesetiawan94-repository .
-          docker tag ydesetiawan94-repository:latest $ECR_REGISTRY:latest
-          docker push $ECR_REGISTRY:latest
+          IMAGE_TAG=$(date +'%Y%m%d%H%M%S')-${{ github.sha }}
+          docker build -t ydesetiawan94-repository:${IMAGE_TAG} .
+          
+          docker tag ydesetiawan94-repository:${IMAGE_TAG} $ECR_REGISTRY:${IMAGE_TAG}
+          
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            aws ecr batch-delete-image --repository-name ydesetiawan94-repository --image-ids imageTag=latest || echo "No existing tag to delete"
+            docker tag ydesetiawan94-repository:${IMAGE_TAG} $ECR_REGISTRY:latest
+            docker push $ECR_REGISTRY:latest
+          fi
+
+          docker push $ECR_REGISTRY:${IMAGE_TAG}
 
       - name: Log out of Docker
         run: docker logout ${{ secrets.ECR_REPOSITORY }}
