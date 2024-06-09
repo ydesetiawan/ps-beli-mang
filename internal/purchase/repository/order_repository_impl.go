@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"database/sql"
 	merchantModel "ps-beli-mang/internal/merchant/model"
 	"ps-beli-mang/internal/purchase/model"
 	"ps-beli-mang/pkg/errs"
@@ -66,31 +65,18 @@ const (
 )
 
 func (o orderRepositoryImpl) SaveOrder(ctx context.Context, order model.Order) error {
-	// Start a transaction
-	tx, err := o.db.BeginTx(ctx, &sql.TxOptions{})
-	if err != nil {
-		return errs.NewErrInternalServerErrors("error starting transaction: %w", err)
-	}
-
 	// Insert the order
-	_, err = tx.ExecContext(ctx, insertOrderQuery, order.ID, order.UserID, order.TotalPrice, order.DeliveryTime, order.IsOrder, time.Now())
+	_, err := o.db.ExecContext(ctx, insertOrderQuery, order.ID, order.UserID, order.TotalPrice, order.DeliveryTime, order.IsOrder, time.Now())
 	if err != nil {
-		tx.Rollback()
 		return errs.NewErrInternalServerErrors("error inserting order: %w", err)
 	}
 
 	// Insert the order items
 	for _, item := range order.OrderItems {
-		_, err = tx.ExecContext(ctx, insertOrderItemQuery, item.ID, item.UserID, item.OrderID, item.MerchantID, item.MerchantItemID, item.Quantity, item.Price, time.Now())
+		_, err = o.db.ExecContext(ctx, insertOrderItemQuery, item.ID, item.UserID, item.OrderID, item.MerchantID, item.MerchantItemID, item.Quantity, item.Price, time.Now())
 		if err != nil {
-			err := tx.Rollback()
 			return errs.NewErrInternalServerErrors("error inserting order item: %w", err)
 		}
-	}
-
-	// Commit the transaction
-	if err = tx.Commit(); err != nil {
-		return errs.NewErrInternalServerErrors("error committing transaction: %w", err)
 	}
 
 	return nil
