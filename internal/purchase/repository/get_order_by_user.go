@@ -182,7 +182,7 @@ func (o orderRepositoryImpl) GetOrdersByUser(ctx context.Context, params dto.Mer
 
 	}
 
-	var results []dto.OrderDataResponse
+	results := []dto.OrderDataResponse{}
 	for _, orderData := range orderMap {
 		results = append(results, *orderData)
 	}
