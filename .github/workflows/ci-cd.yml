@@ -80,11 +80,17 @@ jobs:
           IMAGE_TAG=$(aws ecr describe-images --repository-name ydesetiawan94-repository --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]' --output text)
           echo "::set-output name=tag::$IMAGE_TAG"
 
+      - name: Get latest task definition ARN
+        id: get-latest-task-def
+        run: |
+          TASK_DEF_ARN=$(aws ecs describe-task-definition --task-definition ydesetiawan-task --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "::set-output name=task_def_arn::$TASK_DEF_ARN"
+
       - name: Update ECS service
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          IMAGE_TAG: ${{ steps.get-latest-tag.outputs.tag }}
+          TASK_DEF_ARN: ${{ steps.get-latest-task-def.outputs.task_def_arn }}
         run: |
-          aws ecs update-service --cluster projectsprint --service ydesetiawan-service --force-new-deployment --task-definition ydesetiawan-task:${IMAGE_TAG}
-  
+          aws ecs update-service --cluster projectsprint --service ydesetiawan-service --force-new-deployment --task-definition $TASK_DEF_ARN
+      
