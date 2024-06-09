@@ -24,6 +24,6 @@ func (s *Server) setupRouter(e *echo.Echo) {
 	e.POST("/image", s.baseHandler.RunActionAuth(s.imageHandler.UploadImage))
 	e.GET("/merchants/nearby/:lat,:long", s.baseHandler.RunActionAuth(s.purchaseHandler.GetNearbyMerchant))
 	e.GET("/health", func(c echo.Context) error {
-		return c.HTML(http.StatusOK, "Health Check OK New 9 jun 2024 14:09")
+		return c.HTML(http.StatusOK, "Health Check OK New 9 jun 2024 14:49")
 	})
 }

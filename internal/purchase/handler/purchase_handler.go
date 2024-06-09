@@ -111,8 +111,10 @@ func (h *PurchaseHandler) OrderEstimate(ctx echo.Context) *response.WebResponse 
 	err = ctx.Bind(&request)
 	helper.Panic400IfError(err)
 
-	request.UserID = userID
-	result, err := h.orderService.OrderEstimate(ctx.Request().Context(), *request)
+	req := dto.MergeOrders(request)
+	req.UserID = userID
+
+	result, err := h.orderService.OrderEstimate(ctx.Request().Context(), req)
 	helper.PanicIfError(err, "OrderEstimate failed")
 
 	return &response.WebResponse{
