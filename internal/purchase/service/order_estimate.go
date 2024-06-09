@@ -45,8 +45,14 @@ func validationOrderEstimate(ctx context.Context, request dto.OrderEstimateReque
 	merchantIds := make(map[string]struct{})
 	itemQtyIds := make(map[string]int)
 	for _, order := range request.Orders {
+		if "" == order.MerchantID {
+			return preOrder, errs.NewErrBadRequest("Merchant ID is required")
+		}
 		merchantIds[order.MerchantID] = struct{}{}
 		for _, item := range order.Items {
+			if "" == item.ItemID {
+				return preOrder, errs.NewErrBadRequest("Item ID is required")
+			}
 			itemQtyIds[item.ItemID] = item.Quantity
 		}
 	}

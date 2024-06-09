@@ -116,7 +116,7 @@ func (h *PurchaseHandler) OrderEstimate(ctx echo.Context) *response.WebResponse 
 	helper.PanicIfError(err, "OrderEstimate failed")
 
 	return &response.WebResponse{
-		Status:  201,
+		Status:  200,
 		Message: "OrderEstimate Successfully",
 		Data:    result,
 	}
