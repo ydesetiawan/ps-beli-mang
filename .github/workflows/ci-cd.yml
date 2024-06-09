@@ -78,6 +78,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TAG: ${{ steps.get-latest-tag.outputs.tag }}
         run: |
-          TAG=$(echo "${{ steps.get-latest-tag.outputs.tag }}")
-          aws ecs update-service --cluster projectsprint --service ydesetiawan-service --force-new-deployment --task-definition ydesetiawan-task:$TAG
+          aws ecs update-service --cluster projectsprint --service ydesetiawan-service --force-new-deployment --task-definition ydesetiawan-task:${TAG}
+     
