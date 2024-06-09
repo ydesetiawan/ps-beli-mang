@@ -118,7 +118,7 @@ func (h *PurchaseHandler) OrderEstimate(ctx echo.Context) *response.WebResponse 
 	return &response.WebResponse{
 		Status:  200,
 		Message: "OrderEstimate Successfully",
-		Data:    result,
+		RawData: result,
 	}
 }
 
@@ -130,13 +130,16 @@ func (h *PurchaseHandler) Order(ctx echo.Context) *response.WebResponse {
 	err = ctx.Bind(&request)
 	helper.Panic400IfError(err)
 
+	err = dto.ValidateCreateOrderRequest(request)
+	helper.Panic400IfError(err)
+
 	err = h.orderService.CreateOrder(ctx.Request().Context(), *request)
 	helper.PanicIfError(err, "CreateMedicalPatient failed")
 
 	return &response.WebResponse{
 		Status:  201,
 		Message: "Order Successfully",
-		Data: &dto.CreateOrderResponse{
+		RawData: &dto.CreateOrderResponse{
 			OrderId: request.CalculatedEstimateId,
 		},
 	}
@@ -157,6 +160,6 @@ func (h *PurchaseHandler) GetOrders(ctx echo.Context) *response.WebResponse {
 	return &response.WebResponse{
 		Status:  200,
 		Message: "GetOrders Successfully",
-		Data:    result,
+		RawData: result,
 	}
 }

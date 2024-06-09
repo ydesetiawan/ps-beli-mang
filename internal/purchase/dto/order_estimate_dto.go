@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"github.com/go-playground/validator/v10"
 	"ps-beli-mang/internal/merchant/model"
 )
 
@@ -36,9 +37,14 @@ type OrderEstimateResponse struct {
 }
 
 type CreateOrderRequest struct {
-	CalculatedEstimateId string
+	CalculatedEstimateId string `json:"calculatedEstimateId" validate:"required"`
+}
+
+func ValidateCreateOrderRequest(req *CreateOrderRequest) error {
+	validate := validator.New()
+	return validate.Struct(req)
 }
 
 type CreateOrderResponse struct {
-	OrderId string
+	OrderId string `json:"orderId"`
 }
