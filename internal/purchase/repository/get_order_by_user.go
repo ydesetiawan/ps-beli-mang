@@ -18,7 +18,7 @@ func buildOrderHistoryQuery(params dto.MerchantRequestParams) string {
 		filters = append(filters, fmt.Sprintf("oi.merchant_id = '%s'", params.MerchantID))
 	}
 	if params.Name != "" {
-		filters = append(filters, fmt.Sprintf("(LOWER(m.name) LIKE LOWER('%%%s%%') OR LOWER(mi.name) LIKE LOWER('%%%s%%'))", params.Name, params.Name))
+		filters = append(filters, fmt.Sprintf("(LOWER(m.name) LIKE LOWER('%%%s%%') AND LOWER(mi.name) LIKE LOWER('%%%s%%'))", params.Name, params.Name))
 	}
 	if params.MerchantCategory != "" {
 		filters = append(filters, fmt.Sprintf("m.merchant_category = '%s'", params.MerchantCategory))
