@@ -6,7 +6,3 @@ CREATE TABLE users (
     role VARCHAR(10) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE INDEX IF NOT EXISTS idx_user_id ON users (id);
-CREATE INDEX IF NOT EXISTS idx_user_username ON users (username);
-CREATE INDEX IF NOT EXISTS idx_user_role ON users (role);
